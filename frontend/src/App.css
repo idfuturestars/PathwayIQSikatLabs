@@ -1,5 +1,8 @@
 .App {
     text-align: center;
+    background-color: #0a0a0a;
+    min-height: 100vh;
+    color: #ffffff;
 }
 
 .App-logo {
@@ -14,7 +17,7 @@
 }
 
 .App-header {
-    background-color: #0f0f10;
+    background-color: #0a0a0a;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -25,7 +28,7 @@
 }
 
 .App-link {
-    color: #61dafb;
+    color: #ffffff;
 }
 
 @keyframes App-logo-spin {
@@ -35,4 +38,61 @@
     to {
         transform: rotate(360deg);
     }
+}
+
+/* PathwayIQ Theme Colors */
+.pathwayiq-bg-primary {
+    background-color: #0a0a0a;
+}
+
+.pathwayiq-bg-secondary {
+    background-color: #1a1a1a;
+}
+
+.pathwayiq-bg-accent {
+    background-color: #2a2a2a;
+}
+
+.pathwayiq-text-primary {
+    color: #ffffff;
+}
+
+.pathwayiq-text-secondary {
+    color: #e0e0e0;
+}
+
+.pathwayiq-text-muted {
+    color: #a0a0a0;
+}
+
+.pathwayiq-border {
+    border-color: #333333;
+}
+
+.pathwayiq-hover:hover {
+    background-color: #1a1a1a;
+}
+
+.pathwayiq-button {
+    background-color: #ffffff;
+    color: #0a0a0a;
+    border: 2px solid #ffffff;
+    transition: all 0.3s ease;
+}
+
+.pathwayiq-button:hover {
+    background-color: #0a0a0a;
+    color: #ffffff;
+}
+
+.pathwayiq-button-secondary {
+    background-color: transparent;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+    transition: all 0.3s ease;
+}
+
+.pathwayiq-button-secondary:hover {
+    background-color: #ffffff;
+    color: #0a0a0a;
 }
