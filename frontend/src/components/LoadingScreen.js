@@ -1,5 +1,5 @@
 import React from 'react';
-import StarLogo from './StarLogo';
+import PathwayIQLogo from './PathwayIQLogo';
 
 const LoadingScreen = () => {
   return (
