@@ -60,7 +60,7 @@ const Layout = ({ children }) => {
             {sidebarOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
           </button>
           
-          <StarLogo size={40} className="mr-3" />
+          <PathwayIQLogo size={40} className="mr-3" />
           <div>
             <h1 className="text-xl font-bold text-white">StarGuide</h1>
             <p className="text-xs text-gray-400">powered by IDFS PathwayIQ™</p>
