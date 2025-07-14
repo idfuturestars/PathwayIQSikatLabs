@@ -338,7 +338,7 @@ const AIMentor = () => {
           </div>
 
           {/* Session Stats */}
-          <div className="starguide-card">
+          <div className="pathwayiq-card">
             <h3 className="text-lg font-semibold text-white mb-4">Session Stats</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
