@@ -96,3 +96,28 @@
     background-color: #ffffff;
     color: #0a0a0a;
 }
+
+.pathwayiq-card {
+    background-color: #1a1a1a;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.pathwayiq-card:hover {
+    background-color: #2a2a2a;
+    border-color: #444444;
+}
+
+.loading-spinner {
+    border: 2px solid #333333;
+    border-top: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
