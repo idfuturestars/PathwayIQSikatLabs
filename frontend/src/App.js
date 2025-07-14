@@ -81,6 +81,14 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/ai-mentor" 
+            element={
+              <ProtectedRoute>
+                <AIMentor />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
