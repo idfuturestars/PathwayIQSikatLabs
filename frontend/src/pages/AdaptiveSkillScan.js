@@ -452,7 +452,7 @@ const AdaptiveSkillScan = () => {
             <p className="text-gray-400 text-sm">Your ability estimate progressed throughout the assessment</p>
           </div>
 
-          <div className="starguide-card">
+          <div className="pathwayiq-card">
             <h3 className="text-xl font-semibold text-white mb-4">Detailed Analytics</h3>
             <div className="space-y-4">
               <div className="flex justify-between">
