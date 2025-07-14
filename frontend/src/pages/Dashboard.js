@@ -59,11 +59,11 @@ const Dashboard = () => {
       action: () => navigate('/learning-pods'),
     },
     {
-      title: 'Ask StarMentor™',
+      title: 'Ask AI Mentor',
       description: 'Get AI-powered tutoring assistance',
       icon: StarIcon,
       color: 'bg-yellow-500',
-      action: () => navigate('/starmentor'),
+      action: () => navigate('/ai-mentor'),
     },
   ];
 
