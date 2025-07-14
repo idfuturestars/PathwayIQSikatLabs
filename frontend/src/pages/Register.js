@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import StarLogo from '../components/StarLogo';
+import PathwayIQLogo from '../components/PathwayIQLogo';
 import { EyeIcon, EyeSlashIcon, UserIcon, AcademicCapIcon, CogIcon } from '@heroicons/react/24/outline';
 
 const Register = () => {
