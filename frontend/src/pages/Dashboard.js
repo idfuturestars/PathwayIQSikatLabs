@@ -143,7 +143,7 @@ const Dashboard = () => {
             <button
               key={index}
               onClick={action.action}
-              className="starguide-card hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 cursor-pointer group"
+              className="pathwayiq-card hover:bg-gray-800 transition-all duration-200 transform hover:scale-105 cursor-pointer group"
             >
               <div className="flex items-center mb-4">
                 <div className={`p-3 rounded-lg ${action.color} group-hover:scale-110 transition-transform`}>
