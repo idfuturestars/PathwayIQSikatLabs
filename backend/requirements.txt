@@ -39,3 +39,4 @@ anthropic>=0.34.0
 textblob>=0.17.1
 torch>=2.0.0
 pydub>=0.25.1
+annotated-types>=0.7.0
