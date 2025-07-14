@@ -413,7 +413,7 @@ const AdaptiveSkillScan = () => {
             <p className="text-gray-400">Accuracy</p>
           </div>
           
-          <div className="starguide-card text-center">
+          <div className="pathwayiq-card text-center">
             <AcademicCapIcon className="w-12 h-12 text-blue-500 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-2">
               {sessionAnalytics.estimated_grade_level?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
