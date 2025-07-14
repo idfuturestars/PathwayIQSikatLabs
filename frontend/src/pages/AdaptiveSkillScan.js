@@ -265,7 +265,7 @@ const AdaptiveSkillScan = () => {
           </p>
         </div>
 
-        <div className="starguide-card">
+        <div className="pathwayiq-card">
           <h2 className="text-2xl font-semibold text-white mb-6">Configure Your Assessment</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
