@@ -1,8 +1,8 @@
 import React from 'react';
 
-const StarLogo = ({ size = 32, className = '' }) => {
+const PathwayIQLogo = ({ size = 32, className = '' }) => {
   return (
-    <div className={`star-logo ${className}`} style={{ width: size, height: size }}>
+    <div className={`pathwayiq-logo ${className}`} style={{ width: size, height: size }}>
       <svg 
         width={size} 
         height={size} 
@@ -19,22 +19,35 @@ const StarLogo = ({ size = 32, className = '' }) => {
           </filter>
         </defs>
         <path 
-          d="M50 5 L60 35 L90 45 L60 55 L50 85 L40 55 L10 45 L40 35 Z" 
+          d="M20 20 L80 20 L80 50 L50 50 L50 80 L20 80 Z" 
           fill="white" 
-          stroke="#4CAF50" 
-          strokeWidth="1"
+          stroke="#ffffff" 
+          strokeWidth="2"
           filter="url(#glow)"
         />
-        <circle 
-          cx="50" 
-          cy="45" 
-          r="8" 
-          fill="#4CAF50" 
+        <path 
+          d="M30 30 L70 30 L70 40 L30 40 Z" 
+          fill="#0a0a0a" 
           opacity="0.8"
         />
+        <path 
+          d="M30 50 L40 50 L40 70 L30 70 Z" 
+          fill="#0a0a0a" 
+          opacity="0.8"
+        />
+        <text 
+          x="50" 
+          y="95" 
+          textAnchor="middle" 
+          fill="white" 
+          fontSize="8" 
+          fontFamily="Inter, sans-serif"
+        >
+          IQ
+        </text>
       </svg>
     </div>
   );
 };
 
-export default StarLogo;
+export default PathwayIQLogo;
