@@ -220,7 +220,7 @@ const Dashboard = () => {
           {achievements.map((achievement, index) => (
             <div
               key={index}
-              className={`starguide-card text-center ${
+              className={`pathwayiq-card text-center ${
                 achievement.earned ? 'border-green-500/30' : 'opacity-50'
               }`}
             >
