@@ -20,6 +20,7 @@ from enum import Enum
 import bcrypt
 import redis
 from collections import defaultdict
+import base64
 
 # Import adaptive engine
 import sys
