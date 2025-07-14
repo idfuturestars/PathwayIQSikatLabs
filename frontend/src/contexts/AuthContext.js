@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
       setToken(access_token);
       setUser(newUser);
       
-      toast.success(`Welcome to StarGuide, ${newUser.username}!`);
+      toast.success(`Welcome to PathwayIQ, ${newUser.username}!`);
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.detail || 'Registration failed';
