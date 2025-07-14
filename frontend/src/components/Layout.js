@@ -29,16 +29,16 @@ const Layout = ({ children }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const navigationItems = [
-    { name: 'Mission Control', icon: RocketLaunchIcon, path: '/dashboard', color: '#ff6b6b' },
-    { name: 'SkillScan™', icon: BookOpenIcon, path: '/skillscan', color: '#4ecdc4' },
-    { name: 'StarMentor™', icon: ChatBubbleLeftRightIcon, path: '/starmentor', color: '#45b7d1' },
-    { name: 'Galaxy Quests', icon: MapIcon, path: '/galaxy-quests', color: '#96ceb4' },
-    { name: 'Learning Pods', icon: UserGroupIcon, path: '/learning-pods', color: '#ffd93d' },
-    { name: 'Trajectory', icon: ChartBarIcon, path: '/trajectory', color: '#ff9ff3' },
-    { name: 'StarRankings', icon: TrophyIcon, path: '/starrankings', color: '#f9ca24' },
-    { name: 'StarBadges™', icon: StarIcon, path: '/starbadges', color: '#6c5ce7' },
-    { name: 'SOS Station', icon: ExclamationTriangleIcon, path: '/sos-station', color: '#fd79a8' },
-    { name: 'Mission Intel', icon: InformationCircleIcon, path: '/mission-intel', color: '#00b894' },
+    { name: 'Dashboard', icon: RocketLaunchIcon, path: '/dashboard', color: '#ff6b6b' },
+    { name: 'Adaptive Assessment', icon: BookOpenIcon, path: '/adaptive-assessment', color: '#4ecdc4' },
+    { name: 'AI Mentor', icon: ChatBubbleLeftRightIcon, path: '/ai-mentor', color: '#45b7d1' },
+    { name: 'Learning Quests', icon: MapIcon, path: '/learning-quests', color: '#96ceb4' },
+    { name: 'Study Groups', icon: UserGroupIcon, path: '/study-groups', color: '#ffd93d' },
+    { name: 'Progress Tracking', icon: ChartBarIcon, path: '/progress', color: '#ff9ff3' },
+    { name: 'Leaderboards', icon: TrophyIcon, path: '/leaderboards', color: '#f9ca24' },
+    { name: 'Achievements', icon: StarIcon, path: '/achievements', color: '#6c5ce7' },
+    { name: 'Help Center', icon: ExclamationTriangleIcon, path: '/help', color: '#fd79a8' },
+    { name: 'Analytics', icon: InformationCircleIcon, path: '/analytics', color: '#00b894' },
   ];
 
   const isActive = (path) => location.pathname === path;
