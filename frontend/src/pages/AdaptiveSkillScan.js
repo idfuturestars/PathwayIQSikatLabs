@@ -421,7 +421,7 @@ const AdaptiveSkillScan = () => {
             <p className="text-gray-400">Estimated Level</p>
           </div>
           
-          <div className="starguide-card text-center">
+          <div className="pathwayiq-card text-center">
             <ClockIcon className="w-12 h-12 text-green-500 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-2">
               {Math.round(sessionAnalytics.session_duration / 60)}min
