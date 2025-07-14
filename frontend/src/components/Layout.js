@@ -62,7 +62,7 @@ const Layout = ({ children }) => {
           
           <PathwayIQLogo size={40} className="mr-3" />
           <div>
-            <h1 className="text-xl font-bold text-white">StarGuide</h1>
+            <h1 className="text-xl font-bold text-white">PathwayIQ</h1>
             <p className="text-xs text-gray-400">powered by IDFS PathwayIQ™</p>
           </div>
         </div>
