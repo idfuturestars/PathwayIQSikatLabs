@@ -177,7 +177,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="starguide-card">
+          <div className="pathwayiq-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-400">Study Time</p>
