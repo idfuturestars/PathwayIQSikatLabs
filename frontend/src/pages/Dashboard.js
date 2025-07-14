@@ -241,7 +241,7 @@ const Dashboard = () => {
       {/* Recent Activity */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-6">Recent Activity</h2>
-        <div className="starguide-card">
+        <div className="pathwayiq-card">
           <div className="space-y-4">
             {recentActivities.map((activity, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
