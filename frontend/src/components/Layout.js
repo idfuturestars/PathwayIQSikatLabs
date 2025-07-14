@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import StarLogo from './StarLogo';
+import PathwayIQLogo from './PathwayIQLogo';
 import { 
   RocketLaunchIcon,
   UserGroupIcon,
