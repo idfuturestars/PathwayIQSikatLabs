@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AdaptiveSkillScan from './pages/AdaptiveSkillScan';
+import AIMentor from './pages/AIMentor';
 import LoadingScreen from './components/LoadingScreen';
 import './App.css';
 
