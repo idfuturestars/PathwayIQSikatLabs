@@ -32,7 +32,7 @@ const AIMentor = () => {
     setMessages([
       {
         role: 'assistant',
-        content: `Hello ${user?.username}! I'm StarMentor™, your AI-powered learning companion. I'm here to help you understand concepts, solve problems, and guide your learning journey. What would you like to learn about today?`,
+        content: `Hello ${user?.username}! I'm PathwayIQ AI Mentor, your intelligent learning companion. I'm here to help you understand concepts, solve problems, and guide your learning journey. What would you like to learn about today?`,
         timestamp: new Date()
       }
     ]);
