@@ -361,4 +361,4 @@ const AIMentor = () => {
   );
 };
 
-export default StarMentor;
+export default AIMentor;
