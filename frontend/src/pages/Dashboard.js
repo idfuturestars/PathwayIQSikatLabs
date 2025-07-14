@@ -277,7 +277,7 @@ const Dashboard = () => {
       <div>
         <h2 className="text-2xl font-bold text-white mb-6">Recommended for You</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="starguide-card">
+          <div className="pathwayiq-card">
             <h3 className="text-lg font-semibold text-white mb-4">Continue Learning</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
