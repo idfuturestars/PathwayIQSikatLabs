@@ -405,7 +405,7 @@ const AdaptiveSkillScan = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="starguide-card text-center">
+          <div className="pathwayiq-card text-center">
             <StarIcon className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-white mb-2">
               {Math.round(sessionAnalytics.accuracy * 100)}%
