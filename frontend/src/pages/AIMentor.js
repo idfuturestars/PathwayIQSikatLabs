@@ -63,15 +63,12 @@ const AIMentor = () => {
       // Use enhanced AI chat with emotional intelligence
       const response = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/api/ai/enhanced-chat`,
-        {},
         {
-          params: {
-            message: message,
-            emotional_context: 'focused', // Can be dynamic based on user input analysis
-            learning_style: 'multimodal', // Can be detected from user patterns
-            ai_personality: 'encouraging',
-            session_id: sessionId
-          }
+          message: message,
+          emotional_context: 'focused', // Can be dynamic based on user input analysis
+          learning_style: 'multimodal', // Can be detected from user patterns
+          ai_personality: 'encouraging',
+          session_id: sessionId
         }
       );
 
