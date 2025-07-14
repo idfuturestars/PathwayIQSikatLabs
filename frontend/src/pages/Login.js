@@ -138,7 +138,7 @@ const Login = () => {
                 to="/register"
                 className="font-medium text-green-500 hover:text-green-400 transition-colors"
               >
-                Sign up for StarGuide
+                Sign up for PathwayIQ
               </Link>
             </p>
           </div>
