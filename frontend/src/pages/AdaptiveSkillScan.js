@@ -431,7 +431,7 @@ const AdaptiveSkillScan = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="starguide-card">
+          <div className="pathwayiq-card">
             <h3 className="text-xl font-semibold text-white mb-4">Learning Progress</h3>
             <div className="h-64 flex items-end space-x-2 mb-4">
               {abilityProgress.map((point, index) => (
