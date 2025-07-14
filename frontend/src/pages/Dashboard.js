@@ -78,7 +78,7 @@ const Dashboard = () => {
     { type: 'quest', title: 'Completed JavaScript Basics', time: '2 hours ago', xp: 50 },
     { type: 'badge', title: 'Earned "Code Warrior" badge', time: '1 day ago', xp: 100 },
     { type: 'group', title: 'Joined Python Study Group', time: '2 days ago', xp: 25 },
-    { type: 'mentor', title: 'Asked StarMentor about algorithms', time: '3 days ago', xp: 10 },
+    { type: 'mentor', title: 'Asked AI Mentor about algorithms', time: '3 days ago', xp: 10 },
   ];
 
   if (loading) {
