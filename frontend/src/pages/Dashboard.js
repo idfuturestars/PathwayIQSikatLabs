@@ -203,7 +203,7 @@ const Dashboard = () => {
             </div>
             <div className="mt-4">
               <button 
-                onClick={() => navigate('/starbadges')}
+                onClick={() => navigate('/achievements')}
                 className="text-sm text-green-500 hover:text-green-400"
               >
                 View all badges →
