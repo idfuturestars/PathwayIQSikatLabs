@@ -222,7 +222,7 @@ const AIMentor = () => {
                   <div className="bg-gray-800 border border-gray-700 p-4 rounded-lg">
                     <div className="flex items-center">
                       <SparklesIcon className="w-4 h-4 text-yellow-500 mr-2" />
-                      <span className="text-xs text-gray-400 font-medium mr-3">StarMentor™</span>
+                      <span className="text-xs text-gray-400 font-medium mr-3">AI Mentor</span>
                       <div className="loading-spinner w-4 h-4"></div>
                     </div>
                   </div>
