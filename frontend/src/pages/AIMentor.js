@@ -166,7 +166,7 @@ const AIMentor = () => {
           <div>
             <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
               <SparklesIcon className="w-8 h-8 text-yellow-500 mr-3" />
-              StarMentor™
+              AI Mentor
             </h1>
             <p className="text-gray-400">Your AI-powered learning companion</p>
           </div>
