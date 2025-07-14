@@ -93,7 +93,7 @@ const Register = () => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <StarLogo size={64} />
+            <PathwayIQLogo size={64} />
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Join StarGuide</h2>
           <p className="text-gray-400">powered by IDFS PathwayIQ™</p>
