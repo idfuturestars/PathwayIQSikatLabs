@@ -203,7 +203,7 @@ const AIMentor = () => {
                     {message.role === 'assistant' && !message.isError && (
                       <div className="flex items-center mb-2">
                         <SparklesIcon className="w-4 h-4 text-yellow-500 mr-2" />
-                        <span className="text-xs text-gray-400 font-medium">StarMentor™</span>
+                        <span className="text-xs text-gray-400 font-medium">AI Mentor</span>
                       </div>
                     )}
                     <div 
