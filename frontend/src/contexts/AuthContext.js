@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }) => {
       setToken(access_token);
       setUser(newUser);
       
-      toast.success(`Welcome to PathwayIQ, ${newUser.username}!`);
+      toast.success(`Welcome to IDFS PathwayIQ™, ${newUser.username}!`);
       return { success: true };
     } catch (error) {
       console.error('Registration error:', error);
