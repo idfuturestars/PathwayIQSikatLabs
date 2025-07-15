@@ -61,10 +61,11 @@ const Layout = ({ children }) => {
           </button>
           
           <div className="flex items-center space-x-3">
-            <CombinedBrandingLogo size="medium" layout="horizontal" />
+            <IDFSLogo size="small" />
             <div>
               <h1 className="text-xl font-bold text-white">IDFS PathwayIQ™</h1>
               <p className="text-xs text-gray-400">powered by SikatLabs™</p>
+              <p className="text-xs text-gray-500">© 2024 SikatLabs™ behind IDFS PathwayIQ™</p>
             </div>
           </div>
         </div>
