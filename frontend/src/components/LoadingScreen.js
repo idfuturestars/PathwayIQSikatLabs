@@ -8,8 +8,8 @@ const LoadingScreen = () => {
         <div className="mb-8">
           <PathwayIQLogo size={80} className="mx-auto" />
         </div>
-        <h2 className="text-2xl font-bold text-white mb-2">PathwayIQ</h2>
-        <p className="text-gray-400 mb-8">powered by IDFS PathwayIQ™</p>
+        <h2 className="text-2xl font-bold text-white mb-2">IDFS PathwayIQ™</h2>
+        <p className="text-gray-400 mb-8">powered by SikatLabs™</p>
         <div className="flex justify-center">
           <div className="loading-spinner w-8 h-8"></div>
         </div>
