@@ -135,7 +135,7 @@ const Register = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="username" className="form-label">
+              <label htmlFor="username" className="block mb-2 text-sm font-medium text-white">
                 Username
               </label>
               <input
@@ -143,8 +143,8 @@ const Register = () => {
                 name="username"
                 type="text"
                 required
-                className={`form-input ${errors.username ? 'border-red-500' : ''}`}
-                placeholder="Choose a unique username"
+                className={`w-full px-3 py-2 bg-gray-900 border ${errors.username ? 'border-red-500' : 'border-gray-700'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent`}
+                placeholder="Enter your username"
                 value={formData.username}
                 onChange={handleChange}
               />
@@ -154,22 +154,7 @@ const Register = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="full_name" className="form-label">
-                Full Name (Optional)
-              </label>
-              <input
-                id="full_name"
-                name="full_name"
-                type="text"
-                className="form-input"
-                placeholder="Your full name"
-                value={formData.full_name}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">
+              <label htmlFor="email" className="block mb-2 text-sm font-medium text-white">
                 Email Address
               </label>
               <input
@@ -177,7 +162,7 @@ const Register = () => {
                 name="email"
                 type="email"
                 required
-                className={`form-input ${errors.email ? 'border-red-500' : ''}`}
+                className={`w-full px-3 py-2 bg-gray-900 border ${errors.email ? 'border-red-500' : 'border-gray-700'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent`}
                 placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleChange}
@@ -188,7 +173,22 @@ const Register = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password" className="form-label">
+              <label htmlFor="full_name" className="block mb-2 text-sm font-medium text-white">
+                Full Name
+              </label>
+              <input
+                id="full_name"
+                name="full_name"
+                type="text"
+                className="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent"
+                placeholder="Enter your full name"
+                value={formData.full_name}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password" className="block mb-2 text-sm font-medium text-white">
                 Password
               </label>
               <div className="relative">
@@ -197,8 +197,8 @@ const Register = () => {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className={`form-input pr-12 ${errors.password ? 'border-red-500' : ''}`}
-                  placeholder="Create a password"
+                  className={`w-full px-3 py-2 pr-12 bg-gray-900 border ${errors.password ? 'border-red-500' : 'border-gray-700'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent`}
+                  placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
                 />
@@ -220,7 +220,7 @@ const Register = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="confirmPassword" className="form-label">
+              <label htmlFor="confirmPassword" className="block mb-2 text-sm font-medium text-white">
                 Confirm Password
               </label>
               <div className="relative">
@@ -229,7 +229,7 @@ const Register = () => {
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   required
-                  className={`form-input pr-12 ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                  className={`w-full px-3 py-2 pr-12 bg-gray-900 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-700'} rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent`}
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
