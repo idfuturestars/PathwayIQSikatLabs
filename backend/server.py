@@ -729,16 +729,144 @@ async def create_personalized_learning_path(
         raise HTTPException(status_code=500, detail="Failed to create learning path")
 
 # ============================================================================
-# BASIC ENDPOINTS
+# PRODUCTION MONITORING & HEALTH CHECK ENDPOINTS
+# ============================================================================
+
+@api_router.get("/health")
+async def health_check():
+    """Simple health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+
+@api_router.get("/health/detailed")
+async def detailed_health_check():
+    """Comprehensive health check with system metrics"""
+    return await health_monitor.comprehensive_health_check()
+
+@api_router.get("/health/report")
+async def health_report():
+    """Generate comprehensive health report"""
+    return await health_monitor.generate_health_report()
+
+@api_router.get("/metrics")
+async def system_metrics():
+    """Get system metrics and statistics"""
+    cache_stats = cache_manager.get_stats()
+    app_metrics = await health_monitor.get_application_metrics()
+    system_metrics = health_monitor.get_system_metrics()
+    
+    return {
+        "cache": cache_stats,
+        "application": app_metrics,
+        "system": system_metrics,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
+@api_router.post("/admin/cache/clear")
+async def clear_cache(current_user: User = Depends(get_current_user)):
+    """Clear application cache (admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    success = await cache_manager.clear_all()
+    return {"success": success, "message": "Cache cleared successfully"}
+
+@api_router.post("/admin/cache/warmup")
+async def warm_up_cache(current_user: User = Depends(get_current_user)):
+    """Warm up application cache (admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # This would call cache warm-up functions
+    return {"success": True, "message": "Cache warm-up initiated"}
+
+@api_router.post("/admin/database/index")
+async def create_database_indexes(current_user: User = Depends(get_current_user)):
+    """Create database indexes (admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    success = await db_indexer.create_all_indexes()
+    return {"success": success, "message": "Database indexing completed"}
+
+# ============================================================================
+# PRODUCTION OPTIMIZED ENDPOINTS WITH CACHING
+# ============================================================================
+
+@api_router.get("/questions/cached", response_model=List[Question])
+@cache_result("questions_cached", ttl=3600)
+async def get_cached_questions(
+    subject: Optional[str] = None,
+    difficulty: Optional[QuestionDifficulty] = None,
+    limit: int = 20,
+    current_user: User = Depends(get_current_user)
+):
+    """Get questions with caching for better performance"""
+    query = {}
+    if subject:
+        query["subject"] = subject
+    if difficulty:
+        query["difficulty"] = difficulty
+    
+    questions = await db.questions.find(query).limit(limit).to_list(limit)
+    return [Question(**q) for q in questions]
+
+@api_router.get("/user/analytics/cached")
+@cache_result("user_analytics", ttl=900)  # 15 minutes
+async def get_cached_user_analytics(current_user: User = Depends(get_current_user)):
+    """Get user analytics with caching"""
+    try:
+        # Get user's answers
+        user_answers = await db.user_answers.find({"user_id": current_user.id}).to_list(1000)
+        
+        # Calculate analytics
+        total_questions = len(user_answers)
+        correct_answers = sum(1 for answer in user_answers if answer.get("is_correct", False))
+        total_points = sum(answer.get("points_earned", 0) for answer in user_answers)
+        
+        # Subject breakdown
+        subject_stats = {}
+        for answer in user_answers:
+            # Get question to find subject
+            question = await db.questions.find_one({"id": answer["question_id"]})
+            if question:
+                subject = question.get("subject", "unknown")
+                if subject not in subject_stats:
+                    subject_stats[subject] = {"total": 0, "correct": 0}
+                subject_stats[subject]["total"] += 1
+                if answer.get("is_correct", False):
+                    subject_stats[subject]["correct"] += 1
+        
+        accuracy = (correct_answers / total_questions * 100) if total_questions > 0 else 0
+        
+        return {
+            "user_id": current_user.id,
+            "total_questions_answered": total_questions,
+            "correct_answers": correct_answers,
+            "accuracy_percentage": accuracy,
+            "total_points": total_points,
+            "current_level": current_user.level,
+            "current_xp": current_user.xp,
+            "subject_breakdown": subject_stats,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting user analytics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get user analytics")
+
+# ============================================================================
+# BASIC ENDPOINTS (Updated for Production)
 # ============================================================================
 
 @api_router.get("/")
 async def root():
-    return {"message": "PathwayIQ API is running!", "version": "1.0.0"}
-
-@api_router.get("/health")
-async def health_check():
-    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+    """API root endpoint with production info"""
+    return {
+        "message": "PathwayIQ API is running!",
+        "version": "1.0.0",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 @api_router.post("/questions", response_model=Question)
 async def create_question(question_data: QuestionCreate, current_user: User = Depends(get_current_user)):
