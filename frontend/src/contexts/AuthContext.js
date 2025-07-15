@@ -88,7 +88,13 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/register`, userData);
+      // Set axios timeout for production issues
+      const response = await axios.post(`${API_URL}/api/auth/register`, userData, {
+        timeout: 30000, // 30 second timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       const { access_token, user: newUser } = response.data;
       
@@ -99,9 +105,20 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome to PathwayIQ, ${newUser.username}!`);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Registration failed';
-      toast.error(message);
-      return { success: false, error: message };
+      console.error('Registration error:', error);
+      
+      // Enhanced error handling for timeout issues
+      if (error.code === 'ECONNABORTED') {
+        toast.error('Connection timeout. Please try again.');
+      } else if (error.response?.status === 400) {
+        toast.error(error.response?.data?.detail || 'Registration failed');
+      } else if (error.response?.status === 409) {
+        toast.error('User already exists');
+      } else {
+        toast.error('Registration failed. Please check your connection.');
+      }
+      
+      return { success: false, error: error.message };
     }
   };
 
