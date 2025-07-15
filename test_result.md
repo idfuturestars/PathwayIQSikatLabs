@@ -261,8 +261,10 @@ metadata:
   test_sequence: 1
 
 test_plan:
-  current_focus: []
-  stuck_tasks: []
+  current_focus:
+    - "Production Deployment and URL Configuration"
+  stuck_tasks:
+    - "Production Deployment and URL Configuration"
   test_all: false
   test_priority: "high_first"
 
