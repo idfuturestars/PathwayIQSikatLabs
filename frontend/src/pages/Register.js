@@ -256,24 +256,17 @@ const Register = () => {
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full justify-center"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-black bg-white hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              {loading ? (
-                <div className="loading-spinner"></div>
-              ) : (
-                'Create Account'
-              )}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
           </div>
 
           <div className="text-center">
-            <p className="text-gray-400">
+            <p className="text-sm text-gray-400">
               Already have an account?{' '}
-              <Link
-                to="/login"
-                className="font-medium text-green-500 hover:text-green-400 transition-colors"
-              >
-                Sign in here
+              <Link to="/login" className="text-white hover:text-gray-300 font-medium">
+                Sign in to PathwayIQ
               </Link>
             </p>
           </div>
