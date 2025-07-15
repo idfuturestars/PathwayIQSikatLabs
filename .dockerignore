@@ -1,0 +1,82 @@
+# PathwayIQ Docker Build Context Optimization
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+*.md
+README.md
+PRODUCTION_DEPLOYMENT_GUIDE.md
+
+# Dependencies
+node_modules
+*/node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+.nyc_output
+
+# Production build
+build
+dist
+
+# Environment files (will be copied explicitly)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Runtime files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.pytest_cache
+
+# Logs
+logs
+*.log
+/var/log/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Temporary files
+tmp
+temp
+.temp
+.tmp
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache
+.parcel-cache
+
+# Build artifacts
+*.tgz
+*.tar.gz
