@@ -266,7 +266,7 @@ const Register = () => {
             <p className="text-sm text-gray-400">
               Already have an account?{' '}
               <Link to="/login" className="text-white hover:text-gray-300 font-medium">
-                Sign in to PathwayIQ
+                Sign in to IDFS PathwayIQ™
               </Link>
             </p>
           </div>
