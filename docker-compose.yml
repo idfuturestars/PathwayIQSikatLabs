@@ -1,0 +1,87 @@
+# PathwayIQ Production Docker Compose
+# For orchestrated deployment with database and Redis
+
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: pathwayiq-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: pathwayiq
+      MONGO_INITDB_ROOT_PASSWORD: pathwayiq_password
+      MONGO_INITDB_DATABASE: pathwayiq_production
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports:
+      - "27017:27017"
+    networks:
+      - pathwayiq-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pathwayiq-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass pathwayiq_redis_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - pathwayiq-network
+
+  # PathwayIQ Application
+  pathwayiq:
+    build: .
+    container_name: pathwayiq-app
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - MONGO_URL=mongodb://pathwayiq:pathwayiq_password@mongodb:27017/pathwayiq_production?authSource=admin
+      - REDIS_URL=redis://:pathwayiq_redis_password@redis:6379
+      - DB_NAME=pathwayiq_production
+      - JWT_SECRET=pathwayiq_production_jwt_secret_key_2024
+      - ENVIRONMENT=production
+      - MONITORING_ENABLED=true
+      - CACHE_TTL=3600
+      - SESSION_TIMEOUT=7200
+    ports:
+      - "8001:8001"
+    networks:
+      - pathwayiq-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy (Optional)
+  nginx:
+    image: nginx:alpine
+    container_name: pathwayiq-nginx
+    restart: unless-stopped
+    depends_on:
+      - pathwayiq
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - pathwayiq-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  pathwayiq-network:
+    driver: bridge
