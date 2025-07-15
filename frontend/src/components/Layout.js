@@ -60,10 +60,12 @@ const Layout = ({ children }) => {
             {sidebarOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
           </button>
           
-          <PathwayIQLogo size={40} className="mr-3" />
-          <div>
-            <h1 className="text-xl font-bold text-white">IDFS PathwayIQ™</h1>
-            <p className="text-xs text-gray-400">powered by SikatLabs™</p>
+          <div className="flex items-center space-x-3">
+            <CombinedBrandingLogo size="medium" layout="horizontal" />
+            <div>
+              <h1 className="text-xl font-bold text-white">IDFS PathwayIQ™</h1>
+              <p className="text-xs text-gray-400">powered by SikatLabs™</p>
+            </div>
           </div>
         </div>
 
