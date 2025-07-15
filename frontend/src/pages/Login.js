@@ -128,7 +128,7 @@ const Login = () => {
             <p className="text-sm text-gray-400">
               Don't have an account?{' '}
               <Link to="/register" className="text-white hover:text-gray-300 font-medium">
-                Sign up for PathwayIQ
+                Sign up for IDFS PathwayIQ™
               </Link>
             </p>
           </div>
