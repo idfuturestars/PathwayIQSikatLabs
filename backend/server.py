@@ -64,7 +64,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
 # FastAPI app setup
-app = FastAPI(title="PathwayIQ API", description="IDFS PathwayIQ™ Educational Platform")
+app = FastAPI(title="IDFS PathwayIQ™ API", description="IDFS PathwayIQ™ Educational Platform powered by SikatLabs™")
 api_router = APIRouter(prefix="/api")
 
 # CORS Configuration - Production ready
