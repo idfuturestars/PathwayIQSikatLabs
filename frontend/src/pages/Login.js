@@ -37,7 +37,6 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="max-w-md w-full space-y-8 p-8">
-        <div className="text-center">
         {/* Centered Branding Section */}
         <BrandingSection size="large" className="mb-8" />
 
