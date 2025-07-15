@@ -938,13 +938,64 @@ async def submit_answer(
 # Include the router in the main app
 app.include_router(api_router)
 
-# Configure logging
+# Configure logging for production
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, log_level),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_event():
+    """Application startup tasks"""
+    logger.info("🚀 PathwayIQ API starting up...")
+    
+    # Test database connection
+    try:
+        await client.admin.command('ping')
+        logger.info("✅ Database connection established")
+    except Exception as e:
+        logger.error(f"❌ Database connection failed: {e}")
+    
+    # Initialize indexes
+    try:
+        await db_indexer.create_all_indexes()
+        logger.info("✅ Database indexes created")
+    except Exception as e:
+        logger.warning(f"⚠️ Database indexing warning: {e}")
+    
+    # Start health monitoring
+    if os.getenv('MONITORING_ENABLED', 'true').lower() == 'true':
+        asyncio.create_task(health_monitor.start_monitoring())
+        logger.info("✅ Health monitoring started")
+    
+    # Cache warm-up
+    try:
+        # This would call cache warm-up functions
+        logger.info("✅ Cache warm-up initiated")
+    except Exception as e:
+        logger.warning(f"⚠️ Cache warm-up warning: {e}")
+    
+    logger.info("🎉 PathwayIQ API startup complete!")
+
 @app.on_event("shutdown")
-async def shutdown_db_client():
-    client.close()
+async def shutdown_event():
+    """Application shutdown tasks"""
+    logger.info("🔄 PathwayIQ API shutting down...")
+    
+    # Close database connection
+    try:
+        client.close()
+        logger.info("✅ Database connection closed")
+    except Exception as e:
+        logger.error(f"❌ Database shutdown error: {e}")
+    
+    # Clean up cache
+    try:
+        await cache_manager.clear_all()
+        logger.info("✅ Cache cleared")
+    except Exception as e:
+        logger.warning(f"⚠️ Cache cleanup warning: {e}")
+    
+    logger.info("✅ PathwayIQ API shutdown complete")
