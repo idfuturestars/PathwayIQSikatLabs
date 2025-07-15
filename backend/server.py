@@ -344,7 +344,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 async def get_ai_response(messages: List[Dict[str, str]], user_context: Optional[Dict] = None) -> str:
     try:
-        system_prompt = """You are PathwayIQ AI, an intelligent tutoring assistant powered by IDFS PathwayIQ™. 
+        system_prompt = """You are IDFS PathwayIQ™ AI, an intelligent tutoring assistant powered by SikatLabs™. 
         You help students learn through personalized guidance, explanations, and encouragement.
         
         Guidelines:
