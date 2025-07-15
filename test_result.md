@@ -265,7 +265,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All critical authentication tasks completed successfully"
+    - "MVP 1.3 BRANDING UPDATE VALIDATION"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
