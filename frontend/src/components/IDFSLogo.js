@@ -3,17 +3,18 @@ import React from 'react';
 const IDFSLogo = ({ size = 'medium', className = '' }) => {
   const sizeClasses = {
     small: 'h-8 w-auto',
-    medium: 'h-10 w-auto',
-    large: 'h-12 w-auto',
-    xl: 'h-16 w-auto'
+    medium: 'h-12 w-auto',
+    large: 'h-16 w-auto',
+    xl: 'h-20 w-auto'
   };
 
   return (
-    <div className={`inline-flex items-center ${className}`}>
-      <div className={`bg-white rounded-lg px-3 py-1.5 ${sizeClasses[size]} flex items-center space-x-2`}>
+    <div className={`inline-flex items-center justify-center ${className}`}>
+      {/* ID Future Stars Logo - Using CSS background for now, will be replaced with actual image */}
+      <div className={`bg-black rounded-full px-4 py-2 ${sizeClasses[size]} flex items-center justify-center space-x-2`}>
         {/* Star Icon */}
         <svg 
-          className="h-4 w-4 text-black" 
+          className="h-4 w-4 text-white" 
           fill="currentColor" 
           viewBox="0 0 24 24"
         >
@@ -21,7 +22,7 @@ const IDFSLogo = ({ size = 'medium', className = '' }) => {
         </svg>
         
         {/* ID FUTURE STARS Text */}
-        <div className="text-black font-bold text-sm leading-tight">
+        <div className="text-white font-bold text-sm leading-tight">
           <div>ID FUTURE</div>
           <div>STARS</div>
         </div>
