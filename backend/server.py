@@ -22,6 +22,12 @@ import redis
 from collections import defaultdict
 import base64
 
+# Import production modules
+from session_manager import session_manager
+from health_monitor import health_monitor
+from cache_manager import cache_manager, cache_result
+from database_indexer import db_indexer
+
 # Import adaptive engine
 import sys
 import os
