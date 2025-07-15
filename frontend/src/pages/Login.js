@@ -41,8 +41,8 @@ const Login = () => {
           <div className="flex justify-center mb-6">
             <PathwayIQLogo size={64} />
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Welcome to PathwayIQ</h2>
-          <p className="text-gray-400">powered by IDFS PathwayIQ™</p>
+          <h2 className="text-3xl font-bold text-white mb-2">Welcome to IDFS PathwayIQ™</h2>
+          <p className="text-gray-400">powered by SikatLabs™</p>
           <p className="mt-4 text-gray-300">Sign in to continue your learning journey</p>
         </div>
 
