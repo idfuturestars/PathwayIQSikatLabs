@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
-import CombinedBrandingLogo from './CombinedBrandingLogo';
+import IDFSLogo from './IDFSLogo';
 import { 
   RocketLaunchIcon,
   UserGroupIcon,
