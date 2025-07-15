@@ -91,14 +91,8 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="flex justify-center mb-6">
-            <RegisterBrandingSection />
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Join IDFS PathwayIQ™</h2>
-          <p className="text-gray-400">powered by SikatLabs™</p>
-          <p className="mt-4 text-gray-300">Create your account and start your learning adventure</p>
-        </div>
+        {/* Centered Branding Section */}
+        <RegisterBrandingSection size="large" className="mb-8" />
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
