@@ -49,9 +49,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      // Set axios timeout for production issues
       const response = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
+      }, {
+        timeout: 30000, // 30 second timeout
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       const { access_token, user: userData } = response.data;
@@ -63,9 +69,20 @@ export const AuthProvider = ({ children }) => {
       toast.success(`Welcome back, ${userData.username}!`);
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.detail || 'Login failed';
-      toast.error(message);
-      return { success: false, error: message };
+      console.error('Login error:', error);
+      
+      // Enhanced error handling for timeout issues
+      if (error.code === 'ECONNABORTED') {
+        toast.error('Connection timeout. Please try again.');
+      } else if (error.response?.status === 401) {
+        toast.error('Invalid credentials');
+      } else if (error.response?.status === 400) {
+        toast.error(error.response?.data?.detail || 'Invalid request');
+      } else {
+        toast.error('Login failed. Please check your connection.');
+      }
+      
+      return { success: false, error: error.message };
     }
   };
 
