@@ -39,7 +39,7 @@ const Login = () => {
       <div className="max-w-md w-full space-y-8 p-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <CombinedBrandingLogo size={64} />
+            <CombinedBrandingLogo size="large" layout="horizontal" />
           </div>
           <h2 className="text-3xl font-bold text-white mb-2">Welcome to IDFS PathwayIQ™</h2>
           <p className="text-gray-400">powered by SikatLabs™</p>
