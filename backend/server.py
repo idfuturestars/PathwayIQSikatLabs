@@ -67,17 +67,22 @@ security = HTTPBearer()
 app = FastAPI(title="PathwayIQ API", description="IDFS PathwayIQ™ Educational Platform")
 api_router = APIRouter(prefix="/api")
 
-# CORS Configuration - PathwayIQ deployment
+# CORS Configuration - Production ready
+cors_origins = os.getenv('CORS_ORIGINS', '').split(',') if os.getenv('CORS_ORIGINS') else [
+    "http://localhost:3000",
+    "https://localhost:3000", 
+    "https://f76bbcee-2f06-47e5-b40d-b20a8057d19a.preview.emergentagent.com",
+    "https://pathwayiq.com",
+    "https://www.pathwayiq.com",
+    "https://app.pathwayiq.com",
+    "https://pathwayiq.emergent.host",
+    "https://*.emergent.host",
+    "https://*.emergentagent.com"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://localhost:3000", 
-        "https://f76bbcee-2f06-47e5-b40d-b20a8057d19a.preview.emergentagent.com",
-        "https://pathwayiq.emergent.host",
-        "https://*.emergent.host",
-        "https://*.emergentagent.com"
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
