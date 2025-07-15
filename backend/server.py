@@ -862,8 +862,9 @@ async def get_cached_user_analytics(current_user: User = Depends(get_current_use
 async def root():
     """API root endpoint with production info"""
     return {
-        "message": "PathwayIQ API is running!",
-        "version": "1.0.0",
+        "message": "IDFS PathwayIQ™ API is running!",
+        "platform": "IDFS PathwayIQ™ powered by SikatLabs™",
+        "version": "1.3.0",
         "environment": os.getenv("ENVIRONMENT", "development"),
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
