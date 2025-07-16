@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the PathwayIQ frontend interface to ensure all components work together properly"
+user_problem_statement: "Complete the implementation of voice-to-text processing for think-aloud assessments within the Adaptive Assessment Engine."
 
 frontend:
   - task: "Authentication Flow - Login Page"
