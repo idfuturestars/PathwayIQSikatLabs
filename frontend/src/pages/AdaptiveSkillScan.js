@@ -67,9 +67,18 @@ const AdaptiveSkillScan = () => {
   const [aiHelpDetails, setAiHelpDetails] = useState(null);
   const [showAiHelper, setShowAiHelper] = useState(false);
   
-  // Results and Analytics
-  const [sessionAnalytics, setSessionAnalytics] = useState(null);
-  const [abilityProgress, setAbilityProgress] = useState([]);
+  // Enhanced Think Aloud and Voice Recording
+  const [voiceRecordingEnabled, setVoiceRecordingEnabled] = useState(false);
+  const [showConsentForm, setShowConsentForm] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState('');
+  const [voiceProcessingResult, setVoiceProcessingResult] = useState(null);
+  const [voiceAnalytics, setVoiceAnalytics] = useState({
+    emotional_state: null,
+    confidence_score: 0,
+    think_aloud_quality: 0
+  });
+  const [consentData, setConsentData] = useState(null);
+  const [enhancedThinkAloud, setEnhancedThinkAloud] = useState(false);
   
   // Available options
   const subjects = [
