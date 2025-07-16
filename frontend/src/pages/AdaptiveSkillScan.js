@@ -739,15 +739,60 @@ const AdaptiveSkillScan = () => {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">Think Aloud Mode</h3>
-                <button
-                  onClick={() => setThinkAloudMode(!thinkAloudMode)}
-                  className={`btn-secondary text-sm ${thinkAloudMode ? 'bg-green-500/20 border-green-500' : ''}`}
-                >
-                  <MicrophoneIcon className="w-4 h-4 mr-2" />
-                  {thinkAloudMode ? 'Recording' : 'Start Recording'}
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setThinkAloudMode(!thinkAloudMode)}
+                    className={`btn-secondary text-sm ${thinkAloudMode ? 'bg-green-500/20 border-green-500' : ''}`}
+                  >
+                    {thinkAloudMode ? (
+                      <>
+                        <EyeIcon className="w-4 h-4 mr-2" />
+                        Hide Text Mode
+                      </>
+                    ) : (
+                      <>
+                        <EyeSlashIcon className="w-4 h-4 mr-2" />
+                        Show Text Mode
+                      </>
+                    )}
+                  </button>
+                  {voiceRecordingEnabled && (
+                    <button
+                      onClick={() => setEnhancedThinkAloud(!enhancedThinkAloud)}
+                      className={`btn-secondary text-sm ${enhancedThinkAloud ? 'bg-purple-500/20 border-purple-500' : ''}`}
+                    >
+                      <MicrophoneIcon className="w-4 h-4 mr-2" />
+                      {enhancedThinkAloud ? 'Voice Active' : 'Voice Inactive'}
+                    </button>
+                  )}
+                </div>
               </div>
               
+              {/* Voice Recording (if enabled) */}
+              {voiceRecordingEnabled && enhancedThinkAloud && (
+                <div className="mb-6">
+                  <VoiceRecorder
+                    onTranscriptUpdate={handleVoiceTranscriptUpdate}
+                    onVoiceProcessingComplete={handleVoiceProcessingComplete}
+                    questionId={currentQuestion?.id}
+                    sessionId={sessionId}
+                    autoSubmit={false}
+                    className="mb-4"
+                  />
+                  
+                  {voiceTranscript && (
+                    <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <SpeakerWaveIcon className="w-5 h-5 text-purple-400" />
+                        <span className="text-purple-300 font-medium">Voice Transcript</span>
+                      </div>
+                      <p className="text-white text-sm leading-relaxed">{voiceTranscript}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Text-based Think Aloud */}
               {thinkAloudMode && (
                 <div className="bg-gray-800 rounded-lg p-4 space-y-4">
                   <div>
@@ -757,7 +802,7 @@ const AdaptiveSkillScan = () => {
                       onChange={(e) => setThinkAloudData({...thinkAloudData, reasoning: e.target.value})}
                       placeholder="Walk through your thought process..."
                       className="form-input"
-                      rows="2"
+                      rows="3"
                     />
                   </div>
                   
