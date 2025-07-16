@@ -908,6 +908,17 @@ const AdaptiveSkillScan = () => {
           </div>
         </div>
       )}
+      
+      {/* Consent Form Modal */}
+      {showConsentForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <ConsentForm
+            onConsentSubmit={handleConsentSubmit}
+            onClose={() => setShowConsentForm(false)}
+            className="max-w-lg"
+          />
+        </div>
+      )}
     </div>
   );
 };
