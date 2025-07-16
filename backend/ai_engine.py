@@ -152,28 +152,167 @@ class AdvancedAIEngine:
             ]
         }
 
-    async def process_voice_input(self, audio_data: bytes, user_id: str) -> Dict[str, Any]:
-        """Process voice input and convert to text with emotional analysis"""
+    async def process_voice_input(self, audio_data: bytes, user_id: str, session_context: Optional[Dict] = None) -> Dict[str, Any]:
+        """Process voice input and convert to text with emotional analysis using OpenAI Whisper"""
         try:
-            # For now, return a simulated response since we don't have the full audio processing setup
-            # In production, this would process the actual audio data
-            return {
-                "transcribed_text": "Hello, can you help me with this math problem?",
-                "emotional_state": EmotionalState.FOCUSED,
-                "learning_style": LearningStyle.MULTIMODAL,
-                "confidence_score": 0.85,
-                "processing_time": datetime.now(timezone.utc).isoformat(),
-                "note": "Voice processing simulated - replace with real implementation"
-            }
+            # Create a temporary file for the audio data
+            with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp_file:
+                temp_file.write(audio_data)
+                temp_file_path = temp_file.name
             
+            try:
+                # Convert audio to WAV format using pydub for better compatibility
+                audio = AudioSegment.from_file(temp_file_path)
+                wav_path = temp_file_path.replace('.webm', '.wav')
+                audio.export(wav_path, format="wav")
+                
+                # Use OpenAI Whisper for transcription
+                with open(wav_path, 'rb') as audio_file:
+                    # Use the newer OpenAI client API
+                    client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+                    transcript = client.audio.transcriptions.create(
+                        model="whisper-1",
+                        file=audio_file,
+                        response_format="text"
+                    )
+                
+                transcribed_text = transcript
+                
+                # Analyze emotional state from the transcribed text
+                emotional_state = await self.detect_emotional_state(transcribed_text)
+                
+                # Detect learning style
+                learning_style = self.detect_learning_style_from_text(transcribed_text)
+                
+                # Calculate confidence score based on text analysis
+                confidence_score = self._calculate_confidence_score(transcribed_text, emotional_state)
+                
+                # Analyze think-aloud quality
+                think_aloud_quality = self._analyze_think_aloud_quality(transcribed_text)
+                
+                # Clean up temporary files
+                os.unlink(temp_file_path)
+                os.unlink(wav_path)
+                
+                return {
+                    "transcribed_text": transcribed_text,
+                    "emotional_state": emotional_state,
+                    "learning_style": learning_style,
+                    "confidence_score": confidence_score,
+                    "think_aloud_quality": think_aloud_quality,
+                    "processing_time": datetime.now(timezone.utc).isoformat(),
+                    "user_id": user_id,
+                    "session_context": session_context or {}
+                }
+                
+            except Exception as e:
+                # Clean up temporary file in case of error
+                if os.path.exists(temp_file_path):
+                    os.unlink(temp_file_path)
+                wav_path = temp_file_path.replace('.webm', '.wav')
+                if os.path.exists(wav_path):
+                    os.unlink(wav_path)
+                raise e
+                
         except Exception as e:
             logger.error(f"Voice processing error: {e}")
             return {
                 "error": str(e),
                 "transcribed_text": "",
                 "emotional_state": EmotionalState.FRUSTRATED,
-                "learning_style": None
+                "learning_style": None,
+                "confidence_score": 0.0,
+                "think_aloud_quality": 0.0,
+                "processing_time": datetime.now(timezone.utc).isoformat(),
+                "user_id": user_id
             }
+    
+    def _calculate_confidence_score(self, text: str, emotional_state: EmotionalState) -> float:
+        """Calculate confidence score based on text analysis and emotional state"""
+        if not text:
+            return 0.0
+        
+        # Base confidence from text length (more detailed = more confident)
+        text_confidence = min(0.8, len(text.split()) / 20.0)  # Max 0.8 for 20+ words
+        
+        # Adjust based on emotional state
+        emotion_multipliers = {
+            EmotionalState.CONFIDENT: 1.2,
+            EmotionalState.FOCUSED: 1.0,
+            EmotionalState.EXCITED: 0.9,
+            EmotionalState.CONFUSED: 0.6,
+            EmotionalState.FRUSTRATED: 0.5,
+            EmotionalState.ANXIOUS: 0.4,
+            EmotionalState.BORED: 0.7
+        }
+        
+        emotion_multiplier = emotion_multipliers.get(emotional_state, 1.0)
+        
+        # Check for uncertainty words
+        uncertainty_words = ['maybe', 'perhaps', 'might', 'could', 'unsure', 'not sure', 'think', 'guess']
+        uncertainty_count = sum(1 for word in uncertainty_words if word in text.lower())
+        uncertainty_penalty = min(0.3, uncertainty_count * 0.1)
+        
+        # Check for confidence words
+        confidence_words = ['definitely', 'certainly', 'sure', 'confident', 'clear', 'obvious', 'exactly']
+        confidence_count = sum(1 for word in confidence_words if word in text.lower())
+        confidence_bonus = min(0.2, confidence_count * 0.05)
+        
+        final_confidence = max(0.0, min(1.0, 
+            text_confidence * emotion_multiplier - uncertainty_penalty + confidence_bonus
+        ))
+        
+        return final_confidence
+    
+    def _analyze_think_aloud_quality(self, text: str) -> float:
+        """Analyze the quality of think-aloud verbalization"""
+        if not text:
+            return 0.0
+        
+        quality_score = 0.0
+        
+        # Check for metacognitive indicators
+        metacognitive_words = [
+            'thinking', 'wondering', 'realizing', 'understanding', 'confused',
+            'strategy', 'approach', 'method', 'plan', 'idea', 'connection',
+            'remember', 'recall', 'learned', 'know', 'believe'
+        ]
+        
+        for word in metacognitive_words:
+            if word in text.lower():
+                quality_score += 0.05
+        
+        # Check for reasoning indicators
+        reasoning_words = [
+            'because', 'since', 'therefore', 'so', 'thus', 'hence',
+            'first', 'next', 'then', 'finally', 'step',
+            'if', 'when', 'while', 'although', 'however'
+        ]
+        
+        for word in reasoning_words:
+            if word in text.lower():
+                quality_score += 0.03
+        
+        # Check for self-monitoring
+        monitoring_phrases = [
+            'wait', 'hold on', 'let me think', 'actually', 'correction',
+            'mistake', 'wrong', 'right', 'correct', 'check'
+        ]
+        
+        for phrase in monitoring_phrases:
+            if phrase in text.lower():
+                quality_score += 0.04
+        
+        # Length bonus (more detailed verbalization)
+        word_count = len(text.split())
+        if word_count > 10:
+            quality_score += 0.1
+        if word_count > 25:
+            quality_score += 0.1
+        if word_count > 50:
+            quality_score += 0.1
+        
+        return min(quality_score, 1.0)
 
     async def detect_emotional_state(self, text: str, audio_data: Optional[bytes] = None) -> EmotionalState:
         """Detect emotional state from text and optionally audio"""
