@@ -40,7 +40,282 @@
     }
 }
 
-/* PathwayIQ Theme Colors */
+/* IDFS PathwayIQ™ powered by SikatLabs™ Template Specifications */
+
+/* 🎨 Color Scheme */
+:root {
+    --bg-primary: #0a0a0a;           /* Pure black background */
+    --bg-secondary: #1a1a1a;         /* Cards/panels */
+    --bg-accent: #2a2a2a;            /* Hover states */
+    --border-color: #333333;         /* Dark gray borders */
+    --color-primary: #4CAF50;        /* Green - buttons, progress, accents */
+    --color-primary-hover: #45a049;  /* Darker green */
+    --text-primary: #ffffff;         /* White text */
+    --text-secondary: #888888;       /* Gray text */
+    --color-error: #ff4444;          /* Red for errors */
+}
+
+/* 📐 Layout Structure */
+.layout-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-primary);
+}
+
+.layout-header {
+    height: 64px;
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.layout-sidebar {
+    width: 250px;
+    background-color: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+}
+
+.layout-main {
+    flex: 1;
+    padding: 24px;
+    background-color: var(--bg-primary);
+}
+
+.layout-right-sidebar {
+    width: 300px;
+    background-color: var(--bg-primary);
+    border-left: 1px solid var(--border-color);
+}
+
+/* 📦 Component Styles */
+.pathwayiq-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-secondary:hover {
+    background-color: var(--bg-secondary);
+    border-color: var(--color-primary);
+}
+
+/* Navigation Items */
+.nav-item {
+    padding: 12px 24px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    display: block;
+    border-radius: 8px;
+    margin: 4px 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-item:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.nav-item.active {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-left: 3px solid var(--color-primary);
+}
+
+/* 🌟 Branding Elements */
+.brand-logo {
+    display: inline-flex;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.brand-tagline {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Form Elements */
+.form-input {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text-primary);
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+.form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Loading States */
+.loading-spinner {
+    border: 2px solid var(--border-color);
+    border-top: 2px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Voice Recording Specific */
+.voice-recorder-container {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.voice-recording-active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Consent Form */
+.consent-form-container {
+    background-color: var(--bg-primary);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border-color);
+}
+
+/* Voice Analytics */
+.voice-analytics-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+.voice-confidence-score {
+    color: var(--color-primary);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.voice-emotional-state {
+    color: var(--text-primary);
+    font-size: 16px;
+    text-transform: capitalize;
+}
+
+/* Assessment Interface */
+.assessment-question-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+}
+
+.assessment-progress-bar {
+    background-color: var(--border-color);
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.assessment-progress-fill {
+    background-color: var(--color-primary);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* Error States */
+.error-message {
+    background-color: rgba(255, 68, 68, 0.1);
+    border: 1px solid var(--color-error);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--color-error);
+    margin-bottom: 16px;
+}
+
+/* Success States */
+.success-message {
+    background-color: rgba(76, 175, 80, 0.1);
+    border: 1px solid var(--color-primary);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--color-primary);
+    margin-bottom: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .layout-sidebar {
+        width: 100%;
+        position: fixed;
+        top: 64px;
+        left: -100%;
+        height: calc(100vh - 64px);
+        z-index: 1000;
+        transition: left 0.3s ease;
+    }
+    
+    .layout-sidebar.open {
+        left: 0;
+    }
+    
+    .layout-main {
+        padding: 16px;
+    }
+    
+    .layout-right-sidebar {
+        display: none;
+    }
+}
+
+/* Legacy PathwayIQ Classes (maintained for compatibility) */
 .pathwayiq-bg-primary {
     background-color: #0a0a0a;
 }
