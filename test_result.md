@@ -380,10 +380,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Voice-to-Text Processing Implementation"
-    - "Enhanced Voice Processing Engine"
     - "Real-time Voice Recording Component"
-    - "GDPR Compliance for Under-18 Users"
+    - "Enhanced AdaptiveSkillScan Voice Integration"
+    - "GDPR Compliance UI for Under-18 Users"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
