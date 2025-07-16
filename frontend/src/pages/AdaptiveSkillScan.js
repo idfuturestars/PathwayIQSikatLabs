@@ -628,26 +628,61 @@ const AdaptiveSkillScan = () => {
       </div>
 
       {/* Progress and Ability */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="starguide-card text-center">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="pathwayiq-card text-center">
           <p className="text-gray-400 text-sm">Current Ability</p>
           <p className="text-xl font-bold text-white">
             {Math.round(currentQuestion?.current_ability_estimate * 100)}%
           </p>
         </div>
-        <div className="starguide-card text-center">
+        <div className="pathwayiq-card text-center">
           <p className="text-gray-400 text-sm">Question Level</p>
           <p className={`text-lg font-semibold ${getGradeLevelColor(currentQuestion?.grade_level || '')}`}>
             {currentQuestion?.grade_level?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </p>
         </div>
-        <div className="starguide-card text-center">
+        <div className="pathwayiq-card text-center">
           <p className="text-gray-400 text-sm">Difficulty</p>
           <p className="text-lg font-semibold text-yellow-500">
             {Math.round((currentQuestion?.estimated_difficulty || 0) * 100)}%
           </p>
         </div>
+        {voiceRecordingEnabled && (
+          <div className="pathwayiq-card text-center">
+            <p className="text-gray-400 text-sm">Voice Confidence</p>
+            <p className="text-lg font-semibold text-green-500">
+              {Math.round(voiceAnalytics.confidence_score * 100)}%
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Voice Analytics (if enabled) */}
+      {voiceRecordingEnabled && voiceAnalytics.emotional_state && (
+        <div className="pathwayiq-card mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Voice Analysis</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center">
+              <p className="text-gray-400 text-sm">Emotional State</p>
+              <p className="text-white font-medium capitalize">
+                {voiceAnalytics.emotional_state?.replace('_', ' ')}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-400 text-sm">Confidence Score</p>
+              <p className="text-white font-medium">
+                {Math.round(voiceAnalytics.confidence_score * 100)}%
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-400 text-sm">Think-Aloud Quality</p>
+              <p className="text-white font-medium">
+                {Math.round(voiceAnalytics.think_aloud_quality * 100)}%
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Question */}
       {currentQuestion && (
