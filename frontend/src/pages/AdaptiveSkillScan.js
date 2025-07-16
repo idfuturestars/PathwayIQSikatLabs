@@ -512,10 +512,10 @@ const AdaptiveSkillScan = () => {
             Take Another Assessment
           </button>
           <button
-            onClick={() => navigate('/trajectory')}
+            onClick={() => window.location.href = '/dashboard'}
             className="btn-secondary"
           >
-            View Full Progress
+            Back to Dashboard
           </button>
         </div>
       </div>
