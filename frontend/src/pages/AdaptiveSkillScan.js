@@ -455,21 +455,26 @@ const AdaptiveSkillScan = () => {
 
           <div className="bg-gray-800 rounded-lg p-6 mb-6">
             <h3 className="text-lg font-semibold text-white mb-4">How Adaptive SkillScan™ Works</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <ChartBarIcon className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                <AcademicCapIcon className="w-8 h-8 text-blue-500 mx-auto mb-2" />
                 <p className="text-white font-medium">Adaptive Questions</p>
                 <p className="text-gray-400 text-sm">Questions adjust to your skill level</p>
               </div>
               <div>
                 <MicrophoneIcon className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                <p className="text-white font-medium">Voice Recording</p>
+                <p className="text-gray-400 text-sm">Real-time voice transcription</p>
+              </div>
+              <div>
+                <SpeakerWaveIcon className="w-8 h-8 text-purple-500 mx-auto mb-2" />
                 <p className="text-white font-medium">Think-Aloud Analysis</p>
                 <p className="text-gray-400 text-sm">AI analyzes your reasoning process</p>
               </div>
               <div>
-                <AcademicCapIcon className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                <p className="text-white font-medium">Grade Level Detection</p>
-                <p className="text-gray-400 text-sm">Accurate K-PhD+ level assessment</p>
+                <ChartBarIcon className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                <p className="text-white font-medium">Emotional Intelligence</p>
+                <p className="text-gray-400 text-sm">Detects learning emotional states</p>
               </div>
             </div>
           </div>
