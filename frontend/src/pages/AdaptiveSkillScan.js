@@ -416,6 +416,19 @@ const AdaptiveSkillScan = () => {
             <div className="flex items-center">
               <input
                 type="checkbox"
+                id="voice_recording"
+                checked={voiceRecordingEnabled}
+                onChange={toggleVoiceRecording}
+                className="mr-3"
+              />
+              <label htmlFor="voice_recording" className="text-gray-300">
+                Enable Voice Recording (requires consent)
+              </label>
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                type="checkbox"
                 id="ai_tracking"
                 checked={assessmentConfig.enable_ai_help_tracking}
                 onChange={(e) => setAssessmentConfig({...assessmentConfig, enable_ai_help_tracking: e.target.checked})}
@@ -423,6 +436,19 @@ const AdaptiveSkillScan = () => {
               />
               <label htmlFor="ai_tracking" className="text-gray-300">
                 Track AI assistance usage
+              </label>
+            </div>
+            
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="enhanced_think_aloud"
+                checked={enhancedThinkAloud}
+                onChange={(e) => setEnhancedThinkAloud(e.target.checked)}
+                className="mr-3"
+              />
+              <label htmlFor="enhanced_think_aloud" className="text-gray-300">
+                Enhanced Think-Aloud Analysis
               </label>
             </div>
           </div>
