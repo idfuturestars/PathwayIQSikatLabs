@@ -141,6 +141,43 @@ backend:
         -agent: "main"
         -comment: "Implementing age verification and parental consent system for voice data collection"
 
+frontend:
+  - task: "Real-time Voice Recording Component"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/components/VoiceRecorder.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Creating voice recording component with Web Speech API and MediaRecorder for real-time think-aloud capture"
+
+  - task: "Enhanced AdaptiveSkillScan Voice Integration"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/pages/AdaptiveSkillScan.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Integrating voice recording and real-time transcription into the existing adaptive assessment interface"
+
+  - task: "GDPR Compliance UI for Under-18 Users"
+    implemented: false
+    working: false
+    file: "/app/frontend/src/components/ConsentForm.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Creating age verification and parental consent form for voice data collection compliance"
+
   - task: "Authentication Flow - Login Page"
     implemented: true
     working: true
