@@ -772,38 +772,78 @@ def test_openai_api_key_configuration():
 
 def run_all_tests():
     """Run all backend tests"""
-    print(f"\n🚀 Starting PathwayIQ Backend API Tests")
+    print(f"\n🚀 Starting IDFS PathwayIQ™ Backend API Tests")
     print(f"📅 Test run started at: {datetime.now().isoformat()}")
     print(f"🔗 Backend URL: {API_BASE}")
     
     test_results = {}
     
-    # Run tests in order
+    # Run basic tests first
     test_results['health'] = test_health_endpoint()
     test_results['root'] = test_root_endpoint()
     test_results['api_keys'] = test_api_keys_configuration()
+    test_results['openai_key'] = test_openai_api_key_configuration()
     test_results['registration'] = test_user_registration()
     test_results['login'] = test_user_login()
     test_results['database'] = test_database_connection()
-    test_results['adaptive_assessment'] = test_adaptive_assessment_start()
+    
+    # Run adaptive assessment tests
+    test_results['adaptive_assessment_start'] = test_adaptive_assessment_start()
+    test_results['adaptive_assessment_next'] = test_adaptive_assessment_next_question()
+    
+    # Run voice processing tests (main focus)
+    test_results['voice_to_text'] = test_voice_to_text_processing()
+    test_results['voice_think_aloud'] = test_voice_think_aloud()
+    test_results['gdpr_consent'] = test_gdpr_consent_verification()
+    test_results['voice_gdpr_compliance'] = test_voice_processing_with_gdpr()
+    
+    # Run AI chat test
     test_results['ai_chat'] = test_enhanced_ai_chat()
     
     # Print summary
     print(f"\n{'='*60}")
-    print("📊 TEST SUMMARY")
+    print("📊 VOICE-TO-TEXT PROCESSING TEST SUMMARY")
     print(f"{'='*60}")
     
     passed = sum(1 for result in test_results.values() if result)
     total = len(test_results)
     
-    for test_name, result in test_results.items():
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{status} {test_name.replace('_', ' ').title()}")
+    # Categorize results
+    voice_tests = ['voice_to_text', 'voice_think_aloud', 'gdpr_consent', 'voice_gdpr_compliance']
+    assessment_tests = ['adaptive_assessment_start', 'adaptive_assessment_next']
+    basic_tests = ['health', 'root', 'api_keys', 'openai_key', 'registration', 'login', 'database', 'ai_chat']
+    
+    print("\n🎤 VOICE PROCESSING TESTS:")
+    for test_name in voice_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
+    
+    print("\n📊 ADAPTIVE ASSESSMENT TESTS:")
+    for test_name in assessment_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
+    
+    print("\n🔧 BASIC FUNCTIONALITY TESTS:")
+    for test_name in basic_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
     
     print(f"\n🎯 Overall Result: {passed}/{total} tests passed")
     
+    # Check critical voice processing functionality
+    voice_passed = sum(1 for test in voice_tests if test_results.get(test, False))
+    voice_total = len(voice_tests)
+    
+    if voice_passed == voice_total:
+        print("🎉 All voice processing tests passed! Voice-to-text functionality is working correctly.")
+    else:
+        print(f"⚠️  Voice processing tests: {voice_passed}/{voice_total} passed. Some voice features may not be working.")
+    
     if passed == total:
-        print("🎉 All tests passed! PathwayIQ backend is working correctly.")
+        print("🎉 All tests passed! IDFS PathwayIQ™ backend is working correctly.")
         return True
     else:
         print("⚠️  Some tests failed. Please check the details above.")
