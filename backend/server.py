@@ -694,17 +694,151 @@ async def voice_to_text(
 ):
     """Process voice input with emotional and learning style analysis"""
     try:
+        # GDPR Compliance Check
+        if request.user_age is not None and request.user_age < 18:
+            if not request.parental_consent:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Parental consent required for users under 18"
+                )
+        
         # Convert base64 audio to bytes
         audio_bytes = base64.b64decode(request.audio_data)
         
         # Process voice input
-        result = await advanced_ai_engine.process_voice_input(audio_bytes, current_user.id)
+        result = await advanced_ai_engine.process_voice_input(
+            audio_bytes, 
+            current_user.id,
+            request.session_context
+        )
+        
+        # Store voice processing record for analytics (with GDPR compliance)
+        voice_record = {
+            "user_id": current_user.id,
+            "transcribed_text": result.get("transcribed_text", ""),
+            "emotional_state": result.get("emotional_state", ""),
+            "learning_style": result.get("learning_style", ""),
+            "confidence_score": result.get("confidence_score", 0.0),
+            "think_aloud_quality": result.get("think_aloud_quality", 0.0),
+            "timestamp": datetime.now(timezone.utc),
+            "user_age": request.user_age,
+            "parental_consent": request.parental_consent,
+            "session_context": request.session_context or {}
+        }
+        
+        # Only store if user is 18+ or has parental consent
+        if request.user_age is None or request.user_age >= 18 or request.parental_consent:
+            await db.voice_transcripts.insert_one(voice_record)
         
         return result
         
     except Exception as e:
         logger.error(f"Voice to text error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process voice input")
+
+@api_router.post("/ai/voice-think-aloud")
+async def voice_think_aloud(
+    request: VoiceThinkAloudRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Process voice input specifically for think-aloud assessments"""
+    try:
+        # GDPR Compliance Check
+        if request.user_age is not None and request.user_age < 18:
+            if not request.parental_consent:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Parental consent required for users under 18"
+                )
+        
+        # Convert base64 audio to bytes
+        audio_bytes = base64.b64decode(request.audio_data)
+        
+        # Process voice input with assessment context
+        session_context = {
+            "question_id": request.question_id,
+            "session_id": request.session_id,
+            "assessment_type": "think_aloud"
+        }
+        
+        result = await advanced_ai_engine.process_voice_input(
+            audio_bytes, 
+            current_user.id,
+            session_context
+        )
+        
+        # Store think-aloud record for assessment analytics
+        think_aloud_record = {
+            "user_id": current_user.id,
+            "question_id": request.question_id,
+            "session_id": request.session_id,
+            "transcribed_text": result.get("transcribed_text", ""),
+            "emotional_state": result.get("emotional_state", ""),
+            "learning_style": result.get("learning_style", ""),
+            "confidence_score": result.get("confidence_score", 0.0),
+            "think_aloud_quality": result.get("think_aloud_quality", 0.0),
+            "timestamp": datetime.now(timezone.utc),
+            "user_age": request.user_age,
+            "parental_consent": request.parental_consent
+        }
+        
+        # Only store if user is 18+ or has parental consent
+        if request.user_age is None or request.user_age >= 18 or request.parental_consent:
+            await db.think_aloud_transcripts.insert_one(think_aloud_record)
+        
+        # Update adaptive assessment session with think-aloud data
+        if hasattr(adaptive_engine, 'session_data') and request.session_id in adaptive_engine.session_data:
+            session = adaptive_engine.session_data[request.session_id]
+            session.think_aloud_responses.append({
+                "question_id": request.question_id,
+                "transcribed_text": result.get("transcribed_text", ""),
+                "emotional_state": result.get("emotional_state", ""),
+                "confidence_score": result.get("confidence_score", 0.0),
+                "think_aloud_quality": result.get("think_aloud_quality", 0.0),
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Voice think-aloud processing error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process voice think-aloud")
+
+@api_router.post("/ai/consent-verification")
+async def consent_verification(
+    request: ConsentVerificationRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Verify and store parental consent for under-18 users"""
+    try:
+        # Validate request
+        if request.user_age < 18 and not request.parental_consent:
+            raise HTTPException(
+                status_code=400,
+                detail="Parental consent required for users under 18"
+            )
+        
+        # Store consent record
+        consent_record = {
+            "user_id": current_user.id,
+            "user_age": request.user_age,
+            "parental_consent": request.parental_consent,
+            "parent_email": request.parent_email,
+            "consent_timestamp": request.consent_timestamp or datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc)
+        }
+        
+        await db.consent_records.insert_one(consent_record)
+        
+        return {
+            "status": "success",
+            "message": "Consent verification recorded",
+            "can_process_voice": request.user_age >= 18 or request.parental_consent
+        }
+        
+    except Exception as e:
+        logger.error(f"Consent verification error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify consent")
 
 @api_router.post("/ai/personalized-learning-path")
 async def create_personalized_learning_path(
