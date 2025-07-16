@@ -10,6 +10,7 @@ import os
 import sys
 from datetime import datetime
 import uuid
+import base64
 
 # Get backend URL from frontend .env file
 def get_backend_url():
