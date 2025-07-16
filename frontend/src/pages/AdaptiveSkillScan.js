@@ -256,6 +256,62 @@ const AdaptiveSkillScan = () => {
     setShowAiHelper(true);
   };
 
+  // Voice Recording Handlers
+  const handleVoiceTranscriptUpdate = (transcript) => {
+    setVoiceTranscript(transcript);
+    // Update think-aloud data with voice transcript
+    setThinkAloudData(prev => ({
+      ...prev,
+      reasoning: transcript
+    }));
+  };
+
+  const handleVoiceProcessingComplete = (result) => {
+    setVoiceProcessingResult(result);
+    setVoiceAnalytics({
+      emotional_state: result.emotional_state,
+      confidence_score: result.confidence_score,
+      think_aloud_quality: result.think_aloud_quality
+    });
+    
+    // Update think-aloud data with AI analysis
+    setThinkAloudData(prev => ({
+      ...prev,
+      reasoning: result.transcribed_text,
+      confidence_level: Math.round(result.confidence_score * 5), // Convert to 1-5 scale
+      strategy: result.learning_style || prev.strategy
+    }));
+  };
+
+  const handleConsentSubmit = async (consentData) => {
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKEND_URL}/api/ai/consent-verification`,
+        consentData
+      );
+      
+      if (response.data.can_process_voice) {
+        setConsentData(consentData);
+        setVoiceRecordingEnabled(true);
+        setShowConsentForm(false);
+      } else {
+        alert('Unable to enable voice recording without proper consent');
+      }
+    } catch (error) {
+      console.error('Consent verification failed:', error);
+      alert('Failed to verify consent. Please try again.');
+    }
+  };
+
+  const toggleVoiceRecording = () => {
+    if (!voiceRecordingEnabled) {
+      setShowConsentForm(true);
+    } else {
+      setVoiceRecordingEnabled(false);
+      setConsentData(null);
+    }
+  };
+
   const getGradeLevelColor = (gradeLevel) => {
     if (gradeLevel.includes('kindergarten') || gradeLevel.includes('grade_1') || gradeLevel.includes('grade_2')) {
       return 'text-green-400';
