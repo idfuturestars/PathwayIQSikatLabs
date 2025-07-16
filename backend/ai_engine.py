@@ -56,7 +56,6 @@ class AdvancedAIEngine:
     def __init__(self):
         self.emotion_classifier = None
         self.learning_style_detector = None
-        self.voice_recognizer = sr.Recognizer()
         self.ai_personalities = {
             AIPersonality.ENCOURAGING: {
                 "system_prompt": "You are StarGuide AI, an encouraging and supportive tutor. Always provide positive reinforcement, celebrate small wins, and help students build confidence. Use uplifting language and motivate students to keep trying.",
