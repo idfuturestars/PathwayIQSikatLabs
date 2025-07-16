@@ -104,7 +104,43 @@
 
 user_problem_statement: "Complete the implementation of voice-to-text processing for think-aloud assessments within the Adaptive Assessment Engine."
 
-frontend:
+backend:
+  - task: "Voice-to-Text Processing Implementation"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Starting implementation of voice-to-text processing for think-aloud assessments using Web Speech API and OpenAI Whisper integration"
+
+  - task: "Enhanced Voice Processing Engine"
+    implemented: false
+    working: false
+    file: "/app/backend/ai_engine.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Upgrading ai_engine.py to support real-time voice processing with OpenAI Whisper API"
+
+  - task: "GDPR Compliance for Under-18 Users"
+    implemented: false
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        -working: false
+        -agent: "main"
+        -comment: "Implementing age verification and parental consent system for voice data collection"
+
   - task: "Authentication Flow - Login Page"
     implemented: true
     working: true
