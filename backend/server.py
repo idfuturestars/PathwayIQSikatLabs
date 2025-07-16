@@ -298,6 +298,21 @@ class LearningStyleAssessmentRequest(BaseModel):
 class VoiceToTextRequest(BaseModel):
     audio_data: str  # base64 encoded audio
     session_context: Optional[Dict[str, Any]] = None
+    user_age: Optional[int] = None
+    parental_consent: Optional[bool] = None
+
+class VoiceThinkAloudRequest(BaseModel):
+    audio_data: str  # base64 encoded audio
+    question_id: str
+    session_id: str
+    user_age: Optional[int] = None
+    parental_consent: Optional[bool] = None
+
+class ConsentVerificationRequest(BaseModel):
+    user_age: int
+    parental_consent: bool
+    parent_email: Optional[str] = None
+    consent_timestamp: Optional[datetime] = None
 
 # ============================================================================
 # AUTHENTICATION UTILITIES
