@@ -401,6 +401,375 @@ def test_api_keys_configuration():
         print_result(False, f"API keys configuration test failed: {e}")
         return False
 
+def test_voice_to_text_processing():
+    """Test POST /api/ai/voice-to-text - Voice processing with base64 encoded audio data"""
+    print_test_header("Voice-to-Text Processing")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        # Create a simple base64 encoded audio data (mock)
+        # In real scenario, this would be actual audio data
+        mock_audio_data = base64.b64encode(b"mock_audio_data_for_testing").decode('utf-8')
+        
+        # Test with over-18 user (no parental consent needed)
+        voice_request = {
+            "audio_data": mock_audio_data,
+            "session_context": {
+                "assessment_type": "diagnostic",
+                "subject": "mathematics"
+            },
+            "user_age": 25,
+            "parental_consent": None
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/voice-to-text",
+            json=voice_request,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Voice-to-text processing successful for over-18 user")
+            
+            # Check response structure
+            expected_fields = ["transcribed_text", "emotional_state", "learning_style", "confidence_score", "think_aloud_quality"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}: {data.get(field)}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            return True
+        else:
+            print_result(False, f"Voice-to-text processing failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Voice-to-text processing failed with exception: {e}")
+        return False
+
+def test_voice_think_aloud():
+    """Test POST /api/ai/voice-think-aloud - Think-aloud specific voice processing"""
+    print_test_header("Voice Think-Aloud Processing")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        # Create a simple base64 encoded audio data (mock)
+        mock_audio_data = base64.b64encode(b"mock_think_aloud_audio_data").decode('utf-8')
+        
+        think_aloud_request = {
+            "audio_data": mock_audio_data,
+            "question_id": "test_question_123",
+            "session_id": "test_session_456",
+            "user_age": 20,
+            "parental_consent": None
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/voice-think-aloud",
+            json=think_aloud_request,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Voice think-aloud processing successful")
+            
+            # Check response structure
+            expected_fields = ["transcribed_text", "emotional_state", "learning_style", "confidence_score", "think_aloud_quality"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Think-aloud response contains {field}: {data.get(field)}")
+                else:
+                    print_result(False, f"Think-aloud response missing {field}")
+            
+            return True
+        else:
+            print_result(False, f"Voice think-aloud processing failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Voice think-aloud processing failed with exception: {e}")
+        return False
+
+def test_gdpr_consent_verification():
+    """Test POST /api/ai/consent-verification - GDPR compliance for under-18 users"""
+    print_test_header("GDPR Consent Verification")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test 1: Under-18 user with parental consent
+        consent_request_with_consent = {
+            "user_age": 16,
+            "parental_consent": True,
+            "parent_email": "parent@example.com",
+            "consent_timestamp": datetime.now().isoformat()
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/consent-verification",
+            json=consent_request_with_consent,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "GDPR consent verification successful for under-18 with consent")
+            
+            if data.get("can_process_voice") == True:
+                print_result(True, "Voice processing allowed with parental consent")
+            else:
+                print_result(False, "Voice processing not allowed despite parental consent")
+        else:
+            print_result(False, f"GDPR consent verification failed with status {response.status_code}", response.text)
+            return False
+        
+        # Test 2: Under-18 user without parental consent (should fail)
+        consent_request_no_consent = {
+            "user_age": 15,
+            "parental_consent": False,
+            "parent_email": None
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/consent-verification",
+            json=consent_request_no_consent,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 400:
+            print_result(True, "GDPR correctly blocks under-18 users without parental consent")
+        else:
+            print_result(False, f"GDPR should have blocked under-18 user without consent, got status {response.status_code}")
+        
+        # Test 3: Over-18 user (should always work)
+        consent_request_adult = {
+            "user_age": 25,
+            "parental_consent": False
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/consent-verification",
+            json=consent_request_adult,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "GDPR consent verification successful for over-18 user")
+            
+            if data.get("can_process_voice") == True:
+                print_result(True, "Voice processing allowed for adult user")
+            else:
+                print_result(False, "Voice processing should be allowed for adult user")
+        else:
+            print_result(False, f"GDPR consent verification failed for adult user with status {response.status_code}")
+            return False
+        
+        return True
+        
+    except Exception as e:
+        print_result(False, f"GDPR consent verification failed with exception: {e}")
+        return False
+
+def test_voice_processing_with_gdpr():
+    """Test voice processing endpoints with GDPR compliance scenarios"""
+    print_test_header("Voice Processing with GDPR Compliance")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        mock_audio_data = base64.b64encode(b"mock_audio_for_gdpr_test").decode('utf-8')
+        
+        # Test 1: Under-18 user without parental consent (should fail)
+        voice_request_no_consent = {
+            "audio_data": mock_audio_data,
+            "session_context": {"test": "gdpr"},
+            "user_age": 16,
+            "parental_consent": False
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/voice-to-text",
+            json=voice_request_no_consent,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 403:
+            print_result(True, "Voice processing correctly blocked for under-18 without consent")
+        else:
+            print_result(False, f"Voice processing should be blocked for under-18 without consent, got status {response.status_code}")
+        
+        # Test 2: Under-18 user with parental consent (should work)
+        voice_request_with_consent = {
+            "audio_data": mock_audio_data,
+            "session_context": {"test": "gdpr"},
+            "user_age": 17,
+            "parental_consent": True
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/voice-to-text",
+            json=voice_request_with_consent,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            print_result(True, "Voice processing allowed for under-18 with parental consent")
+        else:
+            print_result(False, f"Voice processing should work for under-18 with consent, got status {response.status_code}")
+        
+        return True
+        
+    except Exception as e:
+        print_result(False, f"Voice processing GDPR test failed with exception: {e}")
+        return False
+
+def test_adaptive_assessment_next_question():
+    """Test GET /api/adaptive-assessment/{session_id}/next-question"""
+    print_test_header("Adaptive Assessment Next Question")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # First start an assessment to get a session ID
+        assessment_config = {
+            "subject": "mathematics",
+            "target_grade_level": "grade_8",
+            "assessment_type": "diagnostic",
+            "enable_think_aloud": True,
+            "enable_ai_help_tracking": True,
+            "max_questions": 5
+        }
+        
+        start_response = requests.post(
+            f"{API_BASE}/adaptive-assessment/start",
+            json=assessment_config,
+            headers=headers,
+            timeout=10
+        )
+        
+        if start_response.status_code != 200:
+            print_result(False, "Could not start assessment session for next question test")
+            return False
+        
+        session_data = start_response.json()
+        session_id = session_data.get("session_id")
+        
+        if not session_id:
+            print_result(False, "No session ID returned from assessment start")
+            return False
+        
+        # Now test getting the next question
+        response = requests.get(
+            f"{API_BASE}/adaptive-assessment/{session_id}/next-question",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Next question retrieval successful")
+            
+            # Check if it's a question or session complete
+            if data.get("session_complete"):
+                print_result(True, "Session marked as complete (no more questions)")
+            else:
+                # Check question structure
+                expected_fields = ["id", "question_text", "question_type", "options", "think_aloud_prompts"]
+                for field in expected_fields:
+                    if field in data:
+                        print_result(True, f"Question contains {field}")
+                    else:
+                        print_result(False, f"Question missing {field}")
+                
+                print(f"   Question ID: {data.get('id')}")
+                print(f"   Question Type: {data.get('question_type')}")
+                print(f"   Current Ability: {data.get('current_ability_estimate')}")
+            
+            return True
+        else:
+            print_result(False, f"Next question retrieval failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Next question retrieval failed with exception: {e}")
+        return False
+
+def test_openai_api_key_configuration():
+    """Test OpenAI API key configuration for voice processing"""
+    print_test_header("OpenAI API Key Configuration")
+    
+    try:
+        # Check if OpenAI API key is configured
+        with open('/app/backend/.env', 'r') as f:
+            env_content = f.read()
+        
+        if 'OPENAI_API_KEY=' in env_content:
+            for line in env_content.split('\n'):
+                if line.startswith('OPENAI_API_KEY='):
+                    api_key = line.split('=', 1)[1].strip().strip('"')
+                    if api_key and api_key.startswith('sk-') and len(api_key) > 20:
+                        print_result(True, "OpenAI API key is properly configured")
+                        print(f"   Key prefix: {api_key[:10]}...")
+                        return True
+                    else:
+                        print_result(False, "OpenAI API key appears to be invalid or empty")
+                        return False
+        else:
+            print_result(False, "OpenAI API key not found in configuration")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"OpenAI API key configuration test failed: {e}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print(f"\n🚀 Starting PathwayIQ Backend API Tests")
