@@ -17,15 +17,20 @@ from enum import Enum
 import json
 import numpy as np
 from collections import defaultdict
-import speech_recognition as sr
-import pydub
-from pydub import AudioSegment
 import io
 import base64
 import re
 from textblob import TextBlob
-import torch
 import os
+import tempfile
+import aiofiles
+from pydub import AudioSegment
+from pydub.utils import which
+
+# Configure pydub to work with system ffmpeg
+AudioSegment.converter = which("ffmpeg")
+AudioSegment.ffmpeg = which("ffmpeg")
+AudioSegment.ffprobe = which("ffprobe")
 
 logger = logging.getLogger(__name__)
 
