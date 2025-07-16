@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import VoiceRecorder from '../components/VoiceRecorder';
+import ConsentForm from '../components/ConsentForm';
 import {
   DocumentTextIcon,
   ClockIcon,
@@ -15,7 +17,10 @@ import {
   ExclamationTriangleIcon,
   StarIcon,
   ChartBarIcon,
-  AcademicCapIcon
+  AcademicCapIcon,
+  SpeakerWaveIcon,
+  EyeIcon,
+  EyeSlashIcon
 } from '@heroicons/react/24/outline';
 
 const AdaptiveSkillScan = () => {
