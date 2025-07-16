@@ -80,6 +80,10 @@ const AdaptiveSkillScan = () => {
   const [consentData, setConsentData] = useState(null);
   const [enhancedThinkAloud, setEnhancedThinkAloud] = useState(false);
   
+  // Results and Analytics
+  const [sessionAnalytics, setSessionAnalytics] = useState(null);
+  const [abilityProgress, setAbilityProgress] = useState([]);
+  
   // Available options
   const subjects = [
     'Mathematics', 'Science', 'Programming', 'Computer Science', 
