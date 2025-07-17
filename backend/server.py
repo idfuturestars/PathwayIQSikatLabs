@@ -648,7 +648,354 @@ async def submit_adaptive_answer(
         raise HTTPException(status_code=500, detail="Failed to submit answer")
 
 # ============================================================================
-# ENHANCED AI ENDPOINTS
+# PHASE 2: GAMIFICATION & SOCIAL FEATURES ENDPOINTS
+# ============================================================================
+
+# Badge System Endpoints
+@api_router.get("/badges", response_model=List[Dict[str, Any]])
+async def get_available_badges(current_user: User = Depends(get_current_user)):
+    """Get all available badges"""
+    try:
+        badges = []
+        for badge_id, badge in gamification_engine.badge_definitions.items():
+            badges.append({
+                "id": badge_id,
+                "name": badge.name,
+                "description": badge.description,
+                "icon": badge.icon,
+                "badge_type": badge.badge_type.value,
+                "rarity": badge.rarity.value,
+                "points": badge.points,
+                "category": badge.category
+            })
+        return badges
+    except Exception as e:
+        logger.error(f"Error fetching badges: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch badges")
+
+@api_router.get("/badges/user/{user_id}", response_model=List[Dict[str, Any]])
+async def get_user_badges(user_id: str, current_user: User = Depends(get_current_user)):
+    """Get badges for a specific user"""
+    try:
+        user_badges = await gamification_engine.get_user_badges(user_id)
+        return user_badges
+    except Exception as e:
+        logger.error(f"Error fetching user badges: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch user badges")
+
+@api_router.get("/badges/{badge_id}/progress")
+async def get_badge_progress(badge_id: str, current_user: User = Depends(get_current_user)):
+    """Get progress towards a specific badge"""
+    try:
+        progress = await gamification_engine.get_badge_progress(current_user.id, badge_id)
+        return progress
+    except Exception as e:
+        logger.error(f"Error fetching badge progress: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch badge progress")
+
+@api_router.post("/badges/check")
+async def check_badge_awards(action_data: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    """Check and award badges based on user actions"""
+    try:
+        awarded_badges = await gamification_engine.check_and_award_badges(current_user.id, action_data)
+        return {"awarded_badges": [badge.dict() for badge in awarded_badges]}
+    except Exception as e:
+        logger.error(f"Error checking badges: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check badges")
+
+# Leaderboard Endpoints
+@api_router.get("/leaderboard/global")
+async def get_global_leaderboard(
+    period: str = "weekly",
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    """Get global leaderboard"""
+    try:
+        leaderboard = await competition_engine.get_global_leaderboard(period)
+        return {"leaderboard": leaderboard, "period": period}
+    except Exception as e:
+        logger.error(f"Error fetching global leaderboard: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch leaderboard")
+
+@api_router.get("/leaderboard/subject/{subject}")
+async def get_subject_leaderboard(
+    subject: str,
+    period: str = "weekly",
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    """Get subject-specific leaderboard"""
+    try:
+        # This would implement subject-specific leaderboard logic
+        return {"leaderboard": [], "subject": subject, "period": period}
+    except Exception as e:
+        logger.error(f"Error fetching subject leaderboard: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch subject leaderboard")
+
+# Competition Endpoints
+@api_router.post("/competitions", response_model=Dict[str, Any])
+async def create_competition(
+    competition_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new competition"""
+    try:
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Only teachers and admins can create competitions")
+        
+        competition_data["created_by"] = current_user.id
+        competition = await competition_engine.create_competition(competition_data)
+        return competition.dict()
+    except Exception as e:
+        logger.error(f"Error creating competition: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create competition")
+
+@api_router.post("/competitions/{competition_id}/join")
+async def join_competition(
+    competition_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Join a competition"""
+    try:
+        success = await competition_engine.join_competition(competition_id, current_user.id)
+        return {"success": success, "competition_id": competition_id}
+    except Exception as e:
+        logger.error(f"Error joining competition: {e}")
+        raise HTTPException(status_code=500, detail="Failed to join competition")
+
+@api_router.get("/competitions/{competition_id}/leaderboard")
+async def get_competition_leaderboard(
+    competition_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get competition leaderboard"""
+    try:
+        leaderboard = await competition_engine.get_competition_leaderboard(competition_id)
+        return {"leaderboard": leaderboard, "competition_id": competition_id}
+    except Exception as e:
+        logger.error(f"Error fetching competition leaderboard: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch competition leaderboard")
+
+# Study Group Endpoints
+@api_router.post("/study-groups", response_model=Dict[str, Any])
+async def create_study_group(
+    group_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new study group"""
+    try:
+        group_data["leader_id"] = current_user.id
+        study_group = await study_group_engine.create_study_group(group_data)
+        return study_group.dict()
+    except Exception as e:
+        logger.error(f"Error creating study group: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create study group")
+
+@api_router.post("/study-groups/{group_id}/join")
+async def join_study_group(
+    group_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Join a study group"""
+    try:
+        success = await study_group_engine.join_study_group(group_id, current_user.id)
+        return {"success": success, "group_id": group_id}
+    except Exception as e:
+        logger.error(f"Error joining study group: {e}")
+        raise HTTPException(status_code=500, detail="Failed to join study group")
+
+@api_router.get("/study-groups/user")
+async def get_user_study_groups(current_user: User = Depends(get_current_user)):
+    """Get study groups for current user"""
+    try:
+        study_groups = await study_group_engine.get_user_study_groups(current_user.id)
+        return {"study_groups": study_groups}
+    except Exception as e:
+        logger.error(f"Error fetching user study groups: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch study groups")
+
+@api_router.get("/study-groups/{group_id}/activity")
+async def get_study_group_activity(
+    group_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get study group activity and statistics"""
+    try:
+        activity = await study_group_engine.get_study_group_activity(group_id)
+        return activity
+    except Exception as e:
+        logger.error(f"Error fetching study group activity: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch study group activity")
+
+# ============================================================================
+# PHASE 3: ANALYTICS & REPORTING ENDPOINTS
+# ============================================================================
+
+# Advanced Analytics Endpoints
+@api_router.get("/analytics/learning/{user_id}")
+async def get_learning_analytics(
+    user_id: str,
+    time_range: str = "30d",
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive learning analytics for a user"""
+    try:
+        # Check permission - users can only see their own analytics unless they're admin/teacher
+        if current_user.id != user_id and current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        analytics = await analytics_engine.generate_learning_analytics(user_id, time_range)
+        return analytics
+    except Exception as e:
+        logger.error(f"Error generating learning analytics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate learning analytics")
+
+@api_router.get("/analytics/dashboard")
+async def get_analytics_dashboard(current_user: User = Depends(get_current_user)):
+    """Get analytics dashboard for current user"""
+    try:
+        analytics = await analytics_engine.generate_learning_analytics(current_user.id)
+        return {
+            "user_id": current_user.id,
+            "dashboard_data": analytics,
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error generating analytics dashboard: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate dashboard")
+
+# Predictive Analytics Endpoints
+@api_router.get("/analytics/predictions/{user_id}")
+async def get_predictive_analytics(
+    user_id: str,
+    prediction_type: str = "success_probability",
+    current_user: User = Depends(get_current_user)
+):
+    """Get predictive analytics for a user"""
+    try:
+        # Check permission
+        if current_user.id != user_id and current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Map string to enum
+        prediction_model = PredictionModel(prediction_type)
+        
+        prediction = await analytics_engine.generate_predictive_analytics(user_id, prediction_model)
+        return prediction.dict()
+    except Exception as e:
+        logger.error(f"Error generating predictive analytics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate predictions")
+
+@api_router.get("/analytics/predictions/batch")
+async def get_batch_predictions(
+    user_ids: List[str],
+    prediction_type: str = "success_probability",
+    current_user: User = Depends(get_current_user)
+):
+    """Get batch predictions for multiple users (admin/teacher only)"""
+    try:
+        if current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+            raise HTTPException(status_code=403, detail="Admin or teacher access required")
+        
+        prediction_model = PredictionModel(prediction_type)
+        predictions = []
+        
+        for user_id in user_ids:
+            prediction = await analytics_engine.generate_predictive_analytics(user_id, prediction_model)
+            predictions.append(prediction.dict())
+        
+        return {"predictions": predictions}
+    except Exception as e:
+        logger.error(f"Error generating batch predictions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate batch predictions")
+
+# Reporting Endpoints
+@api_router.post("/reports/generate")
+async def generate_report(
+    report_request: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Generate a comprehensive report"""
+    try:
+        report_type = ReportType(report_request.get("report_type"))
+        target_id = report_request.get("target_id")
+        
+        # Check permissions based on report type
+        if report_type == ReportType.INDIVIDUAL_STUDENT:
+            if current_user.id != target_id and current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+                raise HTTPException(status_code=403, detail="Access denied")
+        elif report_type in [ReportType.CLASS_SUMMARY, ReportType.SUBJECT_PERFORMANCE]:
+            if current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+                raise HTTPException(status_code=403, detail="Teacher or admin access required")
+        
+        report = await analytics_engine.generate_report(report_type, target_id, current_user.id)
+        return report.dict()
+    except Exception as e:
+        logger.error(f"Error generating report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate report")
+
+@api_router.get("/reports/templates")
+async def get_report_templates(current_user: User = Depends(get_current_user)):
+    """Get available report templates"""
+    try:
+        if current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+            raise HTTPException(status_code=403, detail="Teacher or admin access required")
+        
+        templates = analytics_engine.report_templates
+        return {"templates": templates}
+    except Exception as e:
+        logger.error(f"Error fetching report templates: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch report templates")
+
+@api_router.get("/reports/history")
+async def get_report_history(
+    limit: int = 20,
+    current_user: User = Depends(get_current_user)
+):
+    """Get report generation history"""
+    try:
+        # This would query report history from database
+        return {"reports": [], "total": 0}
+    except Exception as e:
+        logger.error(f"Error fetching report history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch report history")
+
+# Class and Subject Analytics (for teachers/admins)
+@api_router.get("/analytics/class/{class_id}")
+async def get_class_analytics(
+    class_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get analytics for an entire class"""
+    try:
+        if current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+            raise HTTPException(status_code=403, detail="Teacher or admin access required")
+        
+        # This would generate class-level analytics
+        return {"class_id": class_id, "analytics": "Class analytics would be implemented here"}
+    except Exception as e:
+        logger.error(f"Error generating class analytics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate class analytics")
+
+@api_router.get("/analytics/subject/{subject}")
+async def get_subject_analytics(
+    subject: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get analytics for a specific subject"""
+    try:
+        if current_user.role not in [UserRole.ADMIN, UserRole.TEACHER]:
+            raise HTTPException(status_code=403, detail="Teacher or admin access required")
+        
+        # This would generate subject-level analytics
+        return {"subject": subject, "analytics": "Subject analytics would be implemented here"}
+    except Exception as e:
+        logger.error(f"Error generating subject analytics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate subject analytics")
+
+# ============================================================================
+# ENHANCED PRODUCTION ENDPOINTS WITH ALL FEATURES
 # ============================================================================
 
 @api_router.post("/ai/enhanced-chat")
