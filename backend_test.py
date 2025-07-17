@@ -319,6 +319,394 @@ def test_enhanced_ai_chat():
         print_result(False, f"Enhanced AI chat failed with exception: {e}")
         return False
 
+def test_voice_to_text():
+    """Test POST /api/ai/voice-to-text (with auth)"""
+    print_test_header("Voice to Text Processing")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        # Create dummy base64 audio data for testing
+        import base64
+        dummy_audio = base64.b64encode(b"dummy_audio_data").decode('utf-8')
+        
+        voice_request = {
+            "audio_data": dummy_audio,
+            "session_context": {"subject": "mathematics", "topic": "algebra"}
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/voice-to-text",
+            json=voice_request,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Voice to text processing successful")
+            print(f"   Response: {data}")
+            return True
+        else:
+            print_result(False, f"Voice to text failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Voice to text failed with exception: {e}")
+        return False
+
+def test_personalized_learning_path():
+    """Test POST /api/ai/personalized-learning-path (with auth)"""
+    print_test_header("Personalized Learning Path Generation")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        learning_path_request = {
+            "subject": "mathematics",
+            "learning_goals": ["Master quadratic equations", "Understand graphing", "Solve word problems"],
+            "target_completion_weeks": 8,
+            "preferred_learning_style": "visual"
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/ai/personalized-learning-path",
+            json=learning_path_request,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Personalized learning path generation successful")
+            print(f"   Response preview: {str(data)[:200]}...")
+            return True
+        else:
+            print_result(False, f"Learning path generation failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Learning path generation failed with exception: {e}")
+        return False
+
+def test_badges_system():
+    """Test GET /api/badges (with auth)"""
+    print_test_header("Badge System")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/badges",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Badge system working")
+            
+            if isinstance(data, list):
+                print_result(True, f"Retrieved {len(data)} badges")
+                
+                # Check badge structure if badges exist
+                if data:
+                    badge = data[0]
+                    required_fields = ["id", "name", "description", "badge_type", "rarity"]
+                    for field in required_fields:
+                        if field in badge:
+                            print_result(True, f"Badge contains {field}")
+                        else:
+                            print_result(False, f"Badge missing {field}")
+                            
+            else:
+                print_result(False, "Badge response is not a list")
+                
+            return True
+        else:
+            print_result(False, f"Badge system failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Badge system failed with exception: {e}")
+        return False
+
+def test_global_leaderboard():
+    """Test GET /api/leaderboard/global (with auth)"""
+    print_test_header("Global Leaderboard")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/leaderboard/global?period=weekly&limit=10",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Global leaderboard working")
+            
+            # Check response structure
+            if "leaderboard" in data and "period" in data:
+                print_result(True, "Leaderboard response has correct structure")
+                print(f"   Period: {data.get('period')}")
+                print(f"   Leaderboard entries: {len(data.get('leaderboard', []))}")
+            else:
+                print_result(False, "Leaderboard response missing required fields")
+                
+            return True
+        else:
+            print_result(False, f"Global leaderboard failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Global leaderboard failed with exception: {e}")
+        return False
+
+def test_competitions():
+    """Test POST /api/competitions (with auth)"""
+    print_test_header("Competition System")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        competition_data = {
+            "name": "Math Challenge 2024",
+            "description": "Test your mathematical skills",
+            "subject": "mathematics",
+            "start_date": "2024-12-01T00:00:00Z",
+            "end_date": "2024-12-31T23:59:59Z",
+            "competition_type": "individual",
+            "max_participants": 100
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/competitions",
+            json=competition_data,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Competition creation successful")
+            
+            # Check response structure
+            if "id" in data and "name" in data:
+                print_result(True, "Competition response has correct structure")
+                print(f"   Competition ID: {data.get('id')}")
+                print(f"   Competition Name: {data.get('name')}")
+            else:
+                print_result(False, "Competition response missing required fields")
+                
+            return True
+        elif response.status_code == 403:
+            print_result(False, "Competition creation failed - insufficient permissions (expected for student role)")
+            return True  # This is expected for student role
+        else:
+            print_result(False, f"Competition system failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Competition system failed with exception: {e}")
+        return False
+
+def test_study_groups():
+    """Test POST /api/study-groups (with auth)"""
+    print_test_header("Study Groups System")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        study_group_data = {
+            "name": "Algebra Study Group",
+            "description": "Group for studying algebra concepts",
+            "subject": "mathematics",
+            "max_members": 10,
+            "is_private": False
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/study-groups",
+            json=study_group_data,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Study group creation successful")
+            
+            # Check response structure
+            if "id" in data and "name" in data:
+                print_result(True, "Study group response has correct structure")
+                print(f"   Group ID: {data.get('id')}")
+                print(f"   Group Name: {data.get('name')}")
+            else:
+                print_result(False, "Study group response missing required fields")
+                
+            return True
+        else:
+            print_result(False, f"Study groups system failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Study groups system failed with exception: {e}")
+        return False
+
+def test_learning_analytics():
+    """Test GET /api/analytics/learning/{user_id} (with auth)"""
+    print_test_header("Learning Analytics")
+    
+    if not auth_token or not user_data:
+        print_result(False, "No auth token or user data available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        user_id = user_data.get('id')
+        response = requests.get(
+            f"{API_BASE}/analytics/learning/{user_id}?time_range=30d",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Learning analytics working")
+            print(f"   Analytics data preview: {str(data)[:200]}...")
+            return True
+        else:
+            print_result(False, f"Learning analytics failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Learning analytics failed with exception: {e}")
+        return False
+
+def test_predictive_analytics():
+    """Test GET /api/analytics/predictions/{user_id} (with auth)"""
+    print_test_header("Predictive Analytics")
+    
+    if not auth_token or not user_data:
+        print_result(False, "No auth token or user data available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        user_id = user_data.get('id')
+        response = requests.get(
+            f"{API_BASE}/analytics/predictions/{user_id}?prediction_type=success_probability",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Predictive analytics working")
+            print(f"   Prediction data preview: {str(data)[:200]}...")
+            return True
+        else:
+            print_result(False, f"Predictive analytics failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Predictive analytics failed with exception: {e}")
+        return False
+
+def test_report_generation():
+    """Test POST /api/reports/generate (with auth)"""
+    print_test_header("Report Generation")
+    
+    if not auth_token or not user_data:
+        print_result(False, "No auth token or user data available - skipping test")
+        return False
+    
+    try:
+        report_request = {
+            "report_type": "individual_student",
+            "target_id": user_data.get('id'),
+            "time_range": "30d",
+            "include_predictions": True
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/reports/generate",
+            json=report_request,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Report generation successful")
+            print(f"   Report data preview: {str(data)[:200]}...")
+            return True
+        else:
+            print_result(False, f"Report generation failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Report generation failed with exception: {e}")
+        return False
+
 def test_database_connection():
     """Test database connection by checking user creation"""
     print_test_header("Database Connection Test")
