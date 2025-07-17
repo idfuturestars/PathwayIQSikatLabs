@@ -168,9 +168,96 @@ def test_user_registration():
         print_result(False, f"Registration failed with exception: {e}")
         return False
 
+def test_demo_login():
+    """Test POST /api/auth/login with demo credentials - TIER 1 CRITICAL TEST"""
+    print_test_header("TIER 1 CRITICAL: Demo Login Test")
+    
+    try:
+        # Test with demo credentials from review request
+        demo_login_data = {
+            "email": "demo@idfs-pathwayiq.com",
+            "password": "demo123"
+        }
+        
+        print(f"🔑 Testing demo credentials: {demo_login_data['email']} / {demo_login_data['password']}")
+        
+        start_time = datetime.now()
+        response = requests.post(
+            f"{API_BASE}/auth/login",
+            json=demo_login_data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        end_time = datetime.now()
+        response_time = (end_time - start_time).total_seconds()
+        
+        print(f"⏱️  Response time: {response_time:.3f} seconds")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, f"Demo login successful in {response_time:.3f}s")
+            
+            # Check response structure
+            required_fields = ["access_token", "token_type", "user"]
+            for field in required_fields:
+                if field in data:
+                    print_result(True, f"Demo login response contains {field}")
+                else:
+                    print_result(False, f"Demo login response missing {field}")
+                    return False
+            
+            # Verify token type
+            if data.get("token_type") == "bearer":
+                print_result(True, "Token type is 'bearer'")
+            else:
+                print_result(False, f"Unexpected token type: {data.get('token_type')}")
+            
+            # Verify JWT token format
+            token = data.get("access_token", "")
+            if token and len(token.split('.')) == 3:
+                print_result(True, "JWT token has correct format (3 parts)")
+            else:
+                print_result(False, "JWT token format is invalid")
+            
+            # Verify user data
+            user = data.get("user", {})
+            if user.get("email") == demo_login_data["email"]:
+                print_result(True, "User email matches demo credentials")
+            else:
+                print_result(False, f"User email mismatch: expected {demo_login_data['email']}, got {user.get('email')}")
+            
+            # Store demo auth token for subsequent tests
+            global auth_token, user_data
+            auth_token = data["access_token"]
+            user_data = data["user"]
+            
+            print(f"   Demo User ID: {user_data.get('id')}")
+            print(f"   Demo User Level: {user_data.get('level', 1)}")
+            print(f"   Demo User XP: {user_data.get('xp', 0)}")
+            print(f"   Demo User Role: {user_data.get('role', 'unknown')}")
+            
+            return True
+        else:
+            print_result(False, f"Demo login failed with status {response.status_code}", response.text)
+            
+            # Additional debugging for failed demo login
+            if response.status_code == 401:
+                print("🔍 DIAGNOSIS: Demo credentials are invalid or demo user doesn't exist in database")
+            elif response.status_code == 404:
+                print("🔍 DIAGNOSIS: Login endpoint not found - check API routing")
+            elif response.status_code == 500:
+                print("🔍 DIAGNOSIS: Server error - check database connection and backend logs")
+            
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Demo login failed with exception: {e}")
+        print("🔍 DIAGNOSIS: Network connectivity issue or backend server not responding")
+        return False
+
 def test_user_login():
-    """Test POST /api/auth/login"""
-    print_test_header("User Login")
+    """Test POST /api/auth/login with registered user"""
+    print_test_header("User Login (Registered User)")
     
     try:
         login_data = {
