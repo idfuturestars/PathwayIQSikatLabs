@@ -71,7 +71,7 @@ api_router = APIRouter(prefix="/api")
 cors_origins = os.getenv('CORS_ORIGINS', '').split(',') if os.getenv('CORS_ORIGINS') else [
     "http://localhost:3000",
     "https://localhost:3000", 
-    "https://f76bbcee-2f06-47e5-b40d-b20a8057d19a.preview.emergentagent.com",
+    "https://cea80389-a630-46ce-85b9-2d49addf17f9.preview.emergentagent.com",
     "https://pathwayiq.com",
     "https://www.pathwayiq.com",
     "https://app.pathwayiq.com",
