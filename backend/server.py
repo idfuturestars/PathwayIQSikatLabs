@@ -43,6 +43,20 @@ from ai_engine import (
     advanced_ai_engine
 )
 
+# Import gamification engine for Phase 2
+from gamification_engine import (
+    GamificationEngine, BadgeType, BadgeRarity, CompetitionType, StudyGroupRole,
+    Badge, UserBadge, Competition, StudyGroup,
+    gamification_engine, competition_engine, study_group_engine
+)
+
+# Import analytics engine for Phase 3
+from analytics_engine import (
+    AdvancedAnalyticsEngine, AnalyticsType, ReportType, PredictionModel,
+    AnalyticsData, Report, PredictionResult,
+    analytics_engine
+)
+
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
