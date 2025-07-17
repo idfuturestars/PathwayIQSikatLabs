@@ -796,32 +796,70 @@ def run_all_tests():
     
     test_results = {}
     
-    # Run tests in order
+    # Phase 0: Basic Infrastructure Tests
     test_results['health'] = test_health_endpoint()
     test_results['root'] = test_root_endpoint()
     test_results['api_keys'] = test_api_keys_configuration()
+    
+    # Authentication System Tests
     test_results['registration'] = test_user_registration()
     test_results['login'] = test_user_login()
     test_results['database'] = test_database_connection()
+    
+    # Phase 1: Voice & AI Intelligence Tests
     test_results['adaptive_assessment'] = test_adaptive_assessment_start()
     test_results['ai_chat'] = test_enhanced_ai_chat()
+    test_results['voice_to_text'] = test_voice_to_text()
+    test_results['personalized_learning'] = test_personalized_learning_path()
+    
+    # Phase 2: Gamification & Social Features Tests
+    test_results['badges'] = test_badges_system()
+    test_results['leaderboard'] = test_global_leaderboard()
+    test_results['competitions'] = test_competitions()
+    test_results['study_groups'] = test_study_groups()
+    
+    # Phase 3: Analytics & Reporting Tests
+    test_results['learning_analytics'] = test_learning_analytics()
+    test_results['predictive_analytics'] = test_predictive_analytics()
+    test_results['report_generation'] = test_report_generation()
     
     # Print summary
     print(f"\n{'='*60}")
-    print("📊 TEST SUMMARY")
+    print("📊 COMPREHENSIVE TEST SUMMARY")
     print(f"{'='*60}")
     
-    passed = sum(1 for result in test_results.values() if result)
-    total = len(test_results)
+    # Group results by phase
+    phases = {
+        "Basic Infrastructure": ['health', 'root', 'api_keys'],
+        "Authentication System": ['registration', 'login', 'database'],
+        "Phase 1 - Voice & AI Intelligence": ['adaptive_assessment', 'ai_chat', 'voice_to_text', 'personalized_learning'],
+        "Phase 2 - Gamification & Social": ['badges', 'leaderboard', 'competitions', 'study_groups'],
+        "Phase 3 - Analytics & Reporting": ['learning_analytics', 'predictive_analytics', 'report_generation']
+    }
     
-    for test_name, result in test_results.items():
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{status} {test_name.replace('_', ' ').title()}")
+    total_passed = 0
+    total_tests = 0
     
-    print(f"\n🎯 Overall Result: {passed}/{total} tests passed")
+    for phase_name, test_names in phases.items():
+        print(f"\n🔸 {phase_name}:")
+        phase_passed = 0
+        phase_total = len(test_names)
+        
+        for test_name in test_names:
+            result = test_results.get(test_name, False)
+            status = "✅ PASS" if result else "❌ FAIL"
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
+            if result:
+                phase_passed += 1
+                total_passed += 1
+            total_tests += 1
+        
+        print(f"  📊 Phase Result: {phase_passed}/{phase_total} passed")
     
-    if passed == total:
-        print("🎉 All tests passed! PathwayIQ backend is working correctly.")
+    print(f"\n🎯 Overall Result: {total_passed}/{total_tests} tests passed")
+    
+    if total_passed == total_tests:
+        print("🎉 All tests passed! PathwayIQ backend with all 9 advanced features is working correctly.")
         return True
     else:
         print("⚠️  Some tests failed. Please check the details above.")
