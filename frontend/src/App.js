@@ -90,6 +90,14 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/advanced-features" 
+            element={
+              <ProtectedRoute>
+                <AdvancedFeatures />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
