@@ -946,13 +946,29 @@ def run_all_tests():
     
     test_results = {}
     
-    # Run tests in order
+    # Run basic tests first
     test_results['health'] = test_health_endpoint()
     test_results['root'] = test_root_endpoint()
     test_results['api_keys'] = test_api_keys_configuration()
-    test_results['registration'] = test_user_registration()
-    test_results['login'] = test_user_login()
+    
+    # Authentication tests
+    test_results['demo_login'] = test_demo_login()  # Use demo login for speech-to-text tests
     test_results['database'] = test_database_connection()
+    
+    # Speech-to-Text tests (main focus of this testing session)
+    print(f"\n{'='*60}")
+    print("🎤 SPEECH-TO-TEXT FUNCTIONALITY TESTING")
+    print(f"{'='*60}")
+    
+    test_results['stt_authentication'] = test_speech_to_text_authentication()
+    test_results['stt_start_session'] = test_speech_to_text_start_session()
+    test_results['stt_transcribe'] = test_speech_to_text_transcribe()
+    test_results['stt_user_sessions'] = test_speech_to_text_get_user_sessions()
+    test_results['stt_session_transcriptions'] = test_speech_to_text_session_transcriptions()
+    test_results['stt_end_session'] = test_speech_to_text_end_session()
+    test_results['stt_error_handling'] = test_speech_to_text_error_handling()
+    
+    # Additional tests
     test_results['adaptive_assessment'] = test_adaptive_assessment_start()
     test_results['ai_chat'] = test_enhanced_ai_chat()
     
@@ -964,17 +980,52 @@ def run_all_tests():
     passed = sum(1 for result in test_results.values() if result)
     total = len(test_results)
     
-    for test_name, result in test_results.items():
-        status = "✅ PASS" if result else "❌ FAIL"
-        print(f"{status} {test_name.replace('_', ' ').title()}")
+    # Group results by category
+    basic_tests = ['health', 'root', 'api_keys', 'demo_login', 'database']
+    stt_tests = ['stt_authentication', 'stt_start_session', 'stt_transcribe', 'stt_user_sessions', 
+                 'stt_session_transcriptions', 'stt_end_session', 'stt_error_handling']
+    other_tests = ['adaptive_assessment', 'ai_chat']
+    
+    print("\n🔧 BASIC FUNCTIONALITY:")
+    for test_name in basic_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
+    
+    print("\n🎤 SPEECH-TO-TEXT FUNCTIONALITY:")
+    stt_passed = 0
+    for test_name in stt_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('stt_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                stt_passed += 1
+    
+    print("\n🤖 AI & ASSESSMENT FUNCTIONALITY:")
+    for test_name in other_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('_', ' ').title()}")
     
     print(f"\n🎯 Overall Result: {passed}/{total} tests passed")
+    print(f"🎤 Speech-to-Text Result: {stt_passed}/{len(stt_tests)} tests passed")
     
     if passed == total:
-        print("🎉 All tests passed! PathwayIQ backend is working correctly.")
+        print("🎉 All tests passed! PathwayIQ backend with Speech-to-Text is working correctly.")
         return True
     else:
         print("⚠️  Some tests failed. Please check the details above.")
+        
+        # Specific feedback for speech-to-text
+        if stt_passed < len(stt_tests):
+            print(f"🎤 Speech-to-Text Status: {stt_passed}/{len(stt_tests)} tests passed")
+            if stt_passed == 0:
+                print("❌ CRITICAL: Speech-to-Text functionality is not working")
+            elif stt_passed < len(stt_tests) // 2:
+                print("⚠️  WARNING: Major issues with Speech-to-Text functionality")
+            else:
+                print("⚠️  MINOR: Some Speech-to-Text features have issues")
+        
         return False
 
 if __name__ == "__main__":
