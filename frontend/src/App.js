@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AdaptiveSkillScan from './pages/AdaptiveSkillScan';
 import AIMentor from './pages/AIMentor';
+import ThinkAloudAssessment from './pages/ThinkAloudAssessment';
 import LoadingScreen from './components/LoadingScreen';
 import './App.css';
 
