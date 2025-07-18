@@ -325,11 +325,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Speech-to-Text API Endpoints"
-    - "OpenAI Whisper Integration"
-    - "Think-Aloud Analysis System"
-    - "Speech-to-Text Database Integration"
-    - "Speech-to-Text Authentication Integration"
+    - "AI-Powered Content Generation Backend Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
