@@ -28,7 +28,7 @@ const ThinkAloudAssessment = () => {
   const initializeAssessment = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       
       // Start adaptive assessment
       const assessmentResponse = await axios.post(
