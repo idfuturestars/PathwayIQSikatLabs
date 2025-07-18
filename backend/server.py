@@ -354,6 +354,21 @@ class ContentResponse(BaseModel):
     quality_score: float
 
 # Temporary class to maintain think-aloud functionality
+class LeaderboardRequest(BaseModel):
+    """Request model for leaderboard queries"""
+    category: str
+    limit: int = 100
+    offset: int = 0
+
+class CompetitionJoinRequest(BaseModel):
+    """Request model for joining competitions"""
+    competition_id: str
+
+class BadgeNotificationRequest(BaseModel):
+    """Request model for badge notifications"""
+    notification_ids: Optional[List[str]] = None
+
+# Temporary class to maintain think-aloud functionality
 class ThinkAloudSessionRequest(BaseModel):
     """Request to start a think-aloud session"""
     assessment_id: str
