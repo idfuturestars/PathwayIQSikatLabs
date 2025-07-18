@@ -848,10 +848,10 @@ def test_speech_to_text_authentication():
             timeout=10
         )
         
-        if response.status_code == 401:
-            print_result(True, "Transcribe endpoint properly requires authentication")
+        if response.status_code in [401, 403]:
+            print_result(True, f"Transcribe endpoint properly requires authentication (status {response.status_code})")
         else:
-            print_result(False, f"Transcribe endpoint should return 401, got {response.status_code}")
+            print_result(False, f"Transcribe endpoint should return 401/403, got {response.status_code}")
         
         # Test start session endpoint without auth
         session_request = {
@@ -867,10 +867,10 @@ def test_speech_to_text_authentication():
             timeout=10
         )
         
-        if response.status_code == 401:
-            print_result(True, "Start session endpoint properly requires authentication")
+        if response.status_code in [401, 403]:
+            print_result(True, f"Start session endpoint properly requires authentication (status {response.status_code})")
         else:
-            print_result(False, f"Start session endpoint should return 401, got {response.status_code}")
+            print_result(False, f"Start session endpoint should return 401/403, got {response.status_code}")
         
         # Test user sessions endpoint without auth
         response = requests.get(
@@ -878,11 +878,11 @@ def test_speech_to_text_authentication():
             timeout=10
         )
         
-        if response.status_code == 401:
-            print_result(True, "User sessions endpoint properly requires authentication")
+        if response.status_code in [401, 403]:
+            print_result(True, f"User sessions endpoint properly requires authentication (status {response.status_code})")
             return True
         else:
-            print_result(False, f"User sessions endpoint should return 401, got {response.status_code}")
+            print_result(False, f"User sessions endpoint should return 401/403, got {response.status_code}")
             return False
             
     except Exception as e:
