@@ -1405,6 +1405,33 @@ async def end_think_aloud_session(
             }
         )
         
+        # Check for achievement unlocks (gamification system)
+        try:
+            gamification = get_gamification_engine(db)
+            leaderboard = get_leaderboard_system(db)
+            
+            # Prepare event data for achievement checking
+            event_data = {
+                "think_aloud_completed": True,
+                "session_quality": session_summary.get("session_effectiveness", 3) / 5.0,
+                "transcription_count": len(transcriptions),
+                "clarity_score": session_summary.get("metacognitive_quality", 3) / 5.0
+            }
+            
+            # Check and update achievements
+            achievement_result = await gamification.check_user_achievements(current_user.id, event_data)
+            
+            # Update think-aloud leaderboard
+            await leaderboard.update_user_score(current_user.id, LeaderboardCategory.THINK_ALOUD, {
+                "think_aloud_completed": True,
+                "session_quality": session_summary.get("session_effectiveness", 3),
+                "clarity_score": session_summary.get("metacognitive_quality", 3) / 5.0
+            })
+            
+        except Exception as gamification_error:
+            logger.warning(f"Gamification update failed: {str(gamification_error)}")
+            # Don't fail the main request if gamification fails
+        
         return {
             "session_id": session_id,
             "status": "completed",
