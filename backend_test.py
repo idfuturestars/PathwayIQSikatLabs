@@ -960,6 +960,614 @@ def test_speech_to_text_error_handling():
         print_result(False, f"Error handling test failed with exception: {e}")
         return False
 
+# ============================================================================
+# AI CONTENT GENERATION TESTS
+# ============================================================================
+
+def test_content_generation_get_content_types():
+    """Test GET /api/content-generation/content-types"""
+    print_test_header("Content Generation - Get Content Types")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/content-generation/content-types",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Content types retrieved successfully")
+            
+            # Check response structure
+            if "content_types" in data:
+                print_result(True, "Response contains content_types")
+                
+                content_types = data["content_types"]
+                expected_types = ["quiz", "lesson", "explanation", "practice_problems", "study_guide", "flashcards"]
+                
+                for expected_type in expected_types:
+                    found = any(ct.get("id") == expected_type for ct in content_types)
+                    if found:
+                        print_result(True, f"Content type '{expected_type}' available")
+                    else:
+                        print_result(False, f"Content type '{expected_type}' missing")
+                
+                # Check structure of first content type
+                if content_types:
+                    first_type = content_types[0]
+                    required_fields = ["id", "name", "description", "icon"]
+                    for field in required_fields:
+                        if field in first_type:
+                            print_result(True, f"Content type contains {field}")
+                        else:
+                            print_result(False, f"Content type missing {field}")
+                
+                print(f"   Total content types: {len(content_types)}")
+                return True
+            else:
+                print_result(False, "Response missing content_types")
+                return False
+        else:
+            print_result(False, f"Get content types failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get content types failed with exception: {e}")
+        return False
+
+def test_content_generation_quiz():
+    """Test POST /api/content-generation/generate for quiz generation"""
+    print_test_header("Content Generation - Quiz Generation")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        quiz_request = {
+            "content_type": "quiz",
+            "subject": "Mathematics",
+            "topic": "Quadratic Equations",
+            "difficulty_level": "intermediate",
+            "learning_objectives": [
+                "Solve quadratic equations using factoring",
+                "Apply the quadratic formula",
+                "Identify the discriminant"
+            ],
+            "target_audience": "8th grade students",
+            "length": "medium",
+            "personalization_enabled": True,
+            "context_prompt": "Create an engaging quiz with real-world applications"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/content-generation/generate",
+            json=quiz_request,
+            headers=headers,
+            timeout=30  # Longer timeout for AI generation
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Quiz generation successful")
+            
+            # Check response structure
+            expected_fields = ["id", "content_type", "subject", "topic", "title", "content", "metadata", "created_at", "quality_score"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Verify content type
+            if data.get("content_type") == "quiz":
+                print_result(True, "Content type is 'quiz'")
+            else:
+                print_result(False, f"Unexpected content type: {data.get('content_type')}")
+            
+            # Verify subject and topic
+            if data.get("subject") == "Mathematics":
+                print_result(True, "Subject matches request")
+            else:
+                print_result(False, f"Subject mismatch: {data.get('subject')}")
+                
+            if data.get("topic") == "Quadratic Equations":
+                print_result(True, "Topic matches request")
+            else:
+                print_result(False, f"Topic mismatch: {data.get('topic')}")
+            
+            # Check content structure
+            content = data.get("content", {})
+            if isinstance(content, dict):
+                print_result(True, "Content is properly structured as dictionary")
+                
+                # Look for quiz-specific fields
+                quiz_fields = ["questions", "instructions", "total_questions"]
+                for field in quiz_fields:
+                    if field in content:
+                        print_result(True, f"Quiz content contains {field}")
+                    else:
+                        print_result(False, f"Quiz content missing {field}")
+            else:
+                print_result(False, "Content is not properly structured")
+            
+            # Check quality score
+            quality_score = data.get("quality_score", 0)
+            if 0 <= quality_score <= 1:
+                print_result(True, f"Quality score is valid: {quality_score}")
+            else:
+                print_result(False, f"Invalid quality score: {quality_score}")
+            
+            print(f"   Generated Content ID: {data.get('id')}")
+            print(f"   Title: {data.get('title', 'No title')}")
+            print(f"   Quality Score: {quality_score}")
+            
+            # Store content ID for subsequent tests
+            global test_content_id
+            test_content_id = data.get('id')
+            
+            return True
+        else:
+            print_result(False, f"Quiz generation failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Quiz generation failed with exception: {e}")
+        return False
+
+def test_content_generation_lesson():
+    """Test POST /api/content-generation/generate for lesson generation"""
+    print_test_header("Content Generation - Lesson Generation")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        lesson_request = {
+            "content_type": "lesson",
+            "subject": "Science",
+            "topic": "Photosynthesis",
+            "difficulty_level": "beginner",
+            "learning_objectives": [
+                "Understand the process of photosynthesis",
+                "Identify the inputs and outputs",
+                "Explain the importance to life on Earth"
+            ],
+            "target_audience": "6th grade students",
+            "length": "short",
+            "personalization_enabled": True
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/content-generation/generate",
+            json=lesson_request,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Lesson generation successful")
+            
+            # Verify content type
+            if data.get("content_type") == "lesson":
+                print_result(True, "Content type is 'lesson'")
+            else:
+                print_result(False, f"Unexpected content type: {data.get('content_type')}")
+            
+            # Check lesson-specific content
+            content = data.get("content", {})
+            if isinstance(content, dict):
+                lesson_fields = ["introduction", "main_content", "activities", "summary"]
+                for field in lesson_fields:
+                    if field in content:
+                        print_result(True, f"Lesson content contains {field}")
+                    else:
+                        print_result(False, f"Lesson content missing {field}")
+            
+            print(f"   Lesson Title: {data.get('title', 'No title')}")
+            print(f"   Subject: {data.get('subject')}")
+            print(f"   Topic: {data.get('topic')}")
+            
+            return True
+        else:
+            print_result(False, f"Lesson generation failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Lesson generation failed with exception: {e}")
+        return False
+
+def test_content_generation_explanation():
+    """Test POST /api/content-generation/generate for explanation generation"""
+    print_test_header("Content Generation - Explanation Generation")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        explanation_request = {
+            "content_type": "explanation",
+            "subject": "History",
+            "topic": "World War II",
+            "difficulty_level": "advanced",
+            "learning_objectives": [
+                "Understand the causes of World War II",
+                "Analyze key events and turning points",
+                "Evaluate the impact on global politics"
+            ],
+            "target_audience": "high school students",
+            "length": "medium"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/content-generation/generate",
+            json=explanation_request,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Explanation generation successful")
+            
+            # Verify content type
+            if data.get("content_type") == "explanation":
+                print_result(True, "Content type is 'explanation'")
+            else:
+                print_result(False, f"Unexpected content type: {data.get('content_type')}")
+            
+            # Check explanation-specific content
+            content = data.get("content", {})
+            if isinstance(content, dict):
+                explanation_fields = ["main_explanation", "key_points", "examples"]
+                for field in explanation_fields:
+                    if field in content:
+                        print_result(True, f"Explanation content contains {field}")
+                    else:
+                        print_result(False, f"Explanation content missing {field}")
+            
+            print(f"   Explanation Title: {data.get('title', 'No title')}")
+            
+            return True
+        else:
+            print_result(False, f"Explanation generation failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Explanation generation failed with exception: {e}")
+        return False
+
+def test_content_generation_get_user_content():
+    """Test GET /api/content-generation/user-content"""
+    print_test_header("Content Generation - Get User Content")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/content-generation/user-content?limit=10",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "User content retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["contents", "total"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            contents = data.get("contents", [])
+            total = data.get("total", 0)
+            
+            print(f"   Total user content: {total}")
+            print(f"   Contents returned: {len(contents)}")
+            
+            # If we have content, check structure
+            if contents:
+                first_content = contents[0]
+                content_fields = ["id", "content_type", "subject", "topic", "title", "created_at", "quality_score"]
+                for field in content_fields:
+                    if field in first_content:
+                        print_result(True, f"Content item contains {field}")
+                    else:
+                        print_result(False, f"Content item missing {field}")
+            
+            return True
+        else:
+            print_result(False, f"Get user content failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get user content failed with exception: {e}")
+        return False
+
+def test_content_generation_get_content_by_id():
+    """Test GET /api/content-generation/content/{content_id}"""
+    print_test_header("Content Generation - Get Content By ID")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test content ID if available, otherwise create a dummy one
+    content_id = globals().get('test_content_id', f'test_content_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/content-generation/content/{content_id}",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Content retrieved by ID successfully")
+            
+            # Check response structure
+            expected_fields = ["id", "content_type", "subject", "topic", "title", "content", "metadata", "created_at", "quality_score", "usage_count"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Verify content ID matches
+            if data.get("id") == content_id:
+                print_result(True, "Content ID matches request")
+            else:
+                print_result(False, f"Content ID mismatch: expected {content_id}, got {data.get('id')}")
+            
+            # Check usage count increment
+            usage_count = data.get("usage_count", 0)
+            if usage_count >= 1:
+                print_result(True, f"Usage count incremented: {usage_count}")
+            else:
+                print_result(False, f"Usage count not incremented: {usage_count}")
+            
+            print(f"   Content ID: {data.get('id')}")
+            print(f"   Title: {data.get('title', 'No title')}")
+            print(f"   Usage Count: {usage_count}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Content not found (expected for test content)")
+            return True
+        else:
+            print_result(False, f"Get content by ID failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get content by ID failed with exception: {e}")
+        return False
+
+def test_content_generation_regenerate():
+    """Test POST /api/content-generation/regenerate/{content_id}"""
+    print_test_header("Content Generation - Regenerate Content")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test content ID if available, otherwise create a dummy one
+    content_id = globals().get('test_content_id', f'test_content_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/content-generation/regenerate/{content_id}",
+            headers=headers,
+            timeout=30  # Longer timeout for AI generation
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Content regeneration successful")
+            
+            # Check response structure (should be same as generate)
+            expected_fields = ["id", "content_type", "subject", "topic", "title", "content", "metadata", "created_at", "quality_score"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Verify new content ID (should be different from original)
+            new_content_id = data.get("id")
+            if new_content_id and new_content_id != content_id:
+                print_result(True, "New content ID generated for regenerated content")
+            else:
+                print_result(False, "Content ID should be different for regenerated content")
+            
+            print(f"   Original Content ID: {content_id}")
+            print(f"   New Content ID: {new_content_id}")
+            print(f"   Regenerated Title: {data.get('title', 'No title')}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Content not found for regeneration (expected for test content)")
+            return True
+        else:
+            print_result(False, f"Content regeneration failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Content regeneration failed with exception: {e}")
+        return False
+
+def test_content_generation_authentication():
+    """Test content generation endpoints without authentication"""
+    print_test_header("Content Generation Authentication Test")
+    
+    try:
+        # Test generate endpoint without auth
+        generate_request = {
+            "content_type": "quiz",
+            "subject": "Math",
+            "topic": "Test",
+            "difficulty_level": "beginner"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/content-generation/generate",
+            json=generate_request,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Generate endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Generate endpoint should return 401/403, got {response.status_code}")
+        
+        # Test content types endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/content-generation/content-types",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Content types endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Content types endpoint should return 401/403, got {response.status_code}")
+        
+        # Test user content endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/content-generation/user-content",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"User content endpoint properly requires authentication (status {response.status_code})")
+            return True
+        else:
+            print_result(False, f"User content endpoint should return 401/403, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Authentication test failed with exception: {e}")
+        return False
+
+def test_content_generation_error_handling():
+    """Test content generation error handling"""
+    print_test_header("Content Generation Error Handling")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test with invalid content type
+        invalid_request = {
+            "content_type": "invalid_type",
+            "subject": "Math",
+            "topic": "Test",
+            "difficulty_level": "beginner"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/content-generation/generate",
+            json=invalid_request,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code in [400, 422, 500]:
+            print_result(True, f"Invalid content type properly rejected with status {response.status_code}")
+        else:
+            print_result(False, f"Invalid content type should be rejected, got {response.status_code}")
+        
+        # Test with missing required fields
+        incomplete_request = {
+            "content_type": "quiz",
+            # Missing subject, topic
+            "difficulty_level": "beginner"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/content-generation/generate",
+            json=incomplete_request,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code in [400, 422]:
+            print_result(True, f"Missing required fields properly rejected with status {response.status_code}")
+        else:
+            print_result(False, f"Missing required fields should be rejected, got {response.status_code}")
+        
+        # Test with invalid content ID
+        response = requests.get(
+            f"{API_BASE}/content-generation/content/invalid_content_id",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 404:
+            print_result(True, "Invalid content ID properly returns 404")
+            return True
+        else:
+            print_result(False, f"Invalid content ID should return 404, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Error handling test failed with exception: {e}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print(f"\n🚀 Starting PathwayIQ Backend API Tests")
