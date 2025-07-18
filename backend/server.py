@@ -31,6 +31,9 @@ from database_indexer import db_indexer
 # Import speech-to-text module
 from speech_to_text import get_speech_processor, SpeechToTextConfig
 
+# Import content generation module
+from content_generator import get_content_generator, ContentGenerationRequest
+
 # Import adaptive engine
 import sys
 import os
