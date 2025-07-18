@@ -641,8 +641,8 @@ metadata:
 test_plan:
   current_focus:
     - "Speech-to-Text Frontend Implementation"
-    - "AI-Powered Content Generation Implementation"
-  stuck_tasks: []
+  stuck_tasks:
+    - "Speech-to-Text Frontend Implementation"
   test_all: false
   test_priority: "high_first"
 
