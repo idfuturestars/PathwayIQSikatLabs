@@ -28,6 +28,9 @@ from health_monitor import health_monitor
 from cache_manager import cache_manager, cache_result
 from database_indexer import db_indexer
 
+# Import speech-to-text module
+from speech_to_text import get_speech_processor, SpeechToTextConfig
+
 # Import adaptive engine
 import sys
 import os
