@@ -160,7 +160,7 @@ const SpeechToTextRecorder = ({
         const base64Audio = reader.result.split(',')[1];
         
         // Send to backend for transcription
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem('token');
         const response = await axios.post(
           `${backendUrl}/api/speech-to-text/transcribe`,
           {
