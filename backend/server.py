@@ -1052,6 +1052,32 @@ async def generate_content(
         # Generate content
         generated_content = await generator.generate_content(content_request, current_user.id)
         
+        # Check for achievement unlocks (gamification system)
+        try:
+            gamification = get_gamification_engine(db)
+            leaderboard = get_leaderboard_system(db)
+            
+            # Prepare event data for achievement checking
+            event_data = {
+                "content_generated": True,
+                "content_quality": generated_content.quality_score,
+                "high_quality_content": generated_content.quality_score >= 0.8,
+                "content_type": generated_content.content_type
+            }
+            
+            # Check and update achievements
+            achievement_result = await gamification.check_user_achievements(current_user.id, event_data)
+            
+            # Update content creation leaderboard
+            await leaderboard.update_user_score(current_user.id, LeaderboardCategory.CONTENT_CREATION, {
+                "content_generated": True,
+                "quality_score": generated_content.quality_score
+            })
+            
+        except Exception as gamification_error:
+            logger.warning(f"Gamification update failed: {str(gamification_error)}")
+            # Don't fail the main request if gamification fails
+        
         # Return response
         return ContentResponse(
             id=generated_content.id,
