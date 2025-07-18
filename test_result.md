@@ -637,10 +637,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "TIER 1 CRITICAL: Demo Login Authentication"
-    - "Backend API Endpoint Accessibility"
-    - "Database Connectivity for Authentication"
-    - "JWT Token Generation and Validation"
+    - "Speech-to-Text Frontend Implementation"
+    - "AI-Powered Content Generation Implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
