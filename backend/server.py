@@ -325,6 +325,31 @@ class TranscriptionResponse(BaseModel):
     think_aloud_analysis: Optional[Dict[str, Any]] = None
     created_at: datetime
 
+class ContentGenerationRequestModel(BaseModel):
+    """Request model for AI content generation"""
+    content_type: str  # quiz, lesson, explanation, practice_problems, study_guide, flashcards
+    subject: str
+    topic: str
+    difficulty_level: str = "intermediate"
+    learning_objectives: List[str] = []
+    target_audience: str = "8th grade students"
+    length: str = "medium"  # short, medium, long
+    personalization_enabled: bool = True
+    context_prompt: Optional[str] = None
+
+class ContentResponse(BaseModel):
+    """Response model for generated content"""
+    id: str
+    content_type: str
+    subject: str
+    topic: str
+    title: str
+    content: Dict[str, Any]
+    metadata: Dict[str, Any]
+    created_at: datetime
+    quality_score: float
+
+# Temporary class to maintain think-aloud functionality
 class ThinkAloudSessionRequest(BaseModel):
     """Request to start a think-aloud session"""
     assessment_id: str
