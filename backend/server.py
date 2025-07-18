@@ -661,6 +661,234 @@ async def submit_adaptive_answer(
         raise HTTPException(status_code=500, detail="Failed to submit answer")
 
 # ============================================================================
+# SPEECH-TO-TEXT ENDPOINTS FOR THINK-ALOUD ASSESSMENTS
+# ============================================================================
+
+@api_router.post("/speech-to-text/transcribe", response_model=TranscriptionResponse)
+async def transcribe_audio(
+    request: SpeechToTextRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Transcribe audio using OpenAI Whisper for think-aloud assessments"""
+    try:
+        # Decode base64 audio data
+        audio_data = base64.b64decode(request.audio_data)
+        
+        # Create configuration
+        config = SpeechToTextConfig(
+            language=request.language,
+            prompt=request.context_prompt
+        )
+        
+        # Get speech processor
+        processor = get_speech_processor(db)
+        
+        # Process audio
+        result = await processor.process_audio_file(
+            audio_data=audio_data,
+            user_id=current_user.id,
+            assessment_id=request.assessment_id,
+            session_id=request.session_id,
+            config=config
+        )
+        
+        # Return response
+        return TranscriptionResponse(
+            id=result.id,
+            text=result.text,
+            confidence=result.confidence,
+            processing_time=result.processing_time,
+            think_aloud_analysis=result.think_aloud_analysis,
+            created_at=result.created_at
+        )
+        
+    except Exception as e:
+        logger.error(f"Speech-to-text transcription error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+
+@api_router.post("/speech-to-text/start-session")
+async def start_think_aloud_session(
+    request: ThinkAloudSessionRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Start a think-aloud session for an assessment"""
+    try:
+        # Create session record
+        session_id = str(uuid.uuid4())
+        
+        session_record = {
+            "id": session_id,
+            "user_id": current_user.id,
+            "assessment_id": request.assessment_id,
+            "question_id": request.question_id,
+            "language": request.language,
+            "enable_analysis": request.enable_analysis,
+            "created_at": datetime.now(timezone.utc),
+            "status": "active",
+            "transcriptions": []
+        }
+        
+        await db.think_aloud_sessions.insert_one(session_record)
+        
+        return {
+            "session_id": session_id,
+            "status": "active",
+            "message": "Think-aloud session started successfully",
+            "instructions": "You can now start speaking your thoughts. The system will transcribe and analyze your responses."
+        }
+        
+    except Exception as e:
+        logger.error(f"Error starting think-aloud session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to start think-aloud session")
+
+@api_router.get("/speech-to-text/session/{session_id}/transcriptions")
+async def get_session_transcriptions(
+    session_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get all transcriptions for a think-aloud session"""
+    try:
+        # Verify session belongs to user
+        session = await db.think_aloud_sessions.find_one({"id": session_id, "user_id": current_user.id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Get transcriptions
+        processor = get_speech_processor(db)
+        transcriptions = await processor.get_transcription_by_session(session_id)
+        
+        return {
+            "session_id": session_id,
+            "transcriptions": [
+                {
+                    "id": t.id,
+                    "text": t.text,
+                    "confidence": t.confidence,
+                    "processing_time": t.processing_time,
+                    "think_aloud_analysis": t.think_aloud_analysis,
+                    "created_at": t.created_at
+                }
+                for t in transcriptions
+            ],
+            "total_transcriptions": len(transcriptions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving session transcriptions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve transcriptions")
+
+@api_router.post("/speech-to-text/session/{session_id}/end")
+async def end_think_aloud_session(
+    session_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """End a think-aloud session and generate summary"""
+    try:
+        # Verify session belongs to user
+        session = await db.think_aloud_sessions.find_one({"id": session_id, "user_id": current_user.id})
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Get all transcriptions for summary
+        processor = get_speech_processor(db)
+        transcriptions = await processor.get_transcription_by_session(session_id)
+        
+        # Generate session summary
+        combined_text = " ".join([t.text for t in transcriptions])
+        session_summary = await _generate_session_summary(combined_text, current_user.id)
+        
+        # Update session status
+        await db.think_aloud_sessions.update_one(
+            {"id": session_id},
+            {
+                "$set": {
+                    "status": "completed",
+                    "ended_at": datetime.now(timezone.utc),
+                    "summary": session_summary,
+                    "total_transcriptions": len(transcriptions)
+                }
+            }
+        )
+        
+        return {
+            "session_id": session_id,
+            "status": "completed",
+            "summary": session_summary,
+            "total_transcriptions": len(transcriptions),
+            "message": "Think-aloud session completed successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error ending think-aloud session: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to end session")
+
+@api_router.get("/speech-to-text/user/sessions")
+async def get_user_think_aloud_sessions(
+    current_user: User = Depends(get_current_user),
+    limit: int = 20
+):
+    """Get user's think-aloud sessions"""
+    try:
+        sessions = await db.think_aloud_sessions.find(
+            {"user_id": current_user.id}
+        ).sort("created_at", -1).limit(limit).to_list(limit)
+        
+        return {
+            "sessions": sessions,
+            "total": len(sessions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving user sessions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve sessions")
+
+async def _generate_session_summary(combined_text: str, user_id: str) -> Dict[str, Any]:
+    """Generate comprehensive session summary using AI"""
+    try:
+        summary_prompt = f"""
+        Generate a comprehensive summary of this think-aloud session:
+        
+        Transcription: "{combined_text}"
+        
+        Provide analysis in JSON format with these keys:
+        - overall_strategy: string describing the main problem-solving approach
+        - confidence_progression: string describing how confidence changed
+        - learning_insights: array of key learning observations
+        - areas_for_improvement: array of specific recommendations
+        - metacognitive_quality: number (1-5) rating metacognitive awareness
+        - emotional_journey: string describing emotional state changes
+        - key_vocabulary_used: array of important academic terms used
+        - session_effectiveness: number (1-5) rating overall session quality
+        """
+        
+        response = await openai.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an educational assessment expert analyzing think-aloud sessions."},
+                {"role": "user", "content": summary_prompt}
+            ],
+            max_tokens=800,
+            temperature=0.3
+        )
+        
+        import json
+        summary = json.loads(response.choices[0].message.content)
+        return summary
+        
+    except Exception as e:
+        logger.error(f"Session summary generation error: {str(e)}")
+        return {
+            "overall_strategy": "Unable to analyze",
+            "confidence_progression": "Analysis unavailable",
+            "learning_insights": ["Session analysis could not be completed"],
+            "areas_for_improvement": ["Please try again"],
+            "metacognitive_quality": 3,
+            "emotional_journey": "Neutral",
+            "key_vocabulary_used": [],
+            "session_effectiveness": 3
+        }
+
+# ============================================================================
 # ENHANCED AI ENDPOINTS
 # ============================================================================
 
