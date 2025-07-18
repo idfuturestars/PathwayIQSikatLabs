@@ -41,6 +41,10 @@ export const AuthProvider = ({ children }) => {
           if (error.response?.status === 401) {
             localStorage.removeItem('token');
             setToken(null);
+          } else {
+            // For other errors, keep the token but don't set user
+            // This allows the app to work even if user loading fails
+            console.warn('User loading failed but token preserved');
           }
         }
       }
