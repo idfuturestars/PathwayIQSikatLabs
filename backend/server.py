@@ -299,6 +299,30 @@ class VoiceToTextRequest(BaseModel):
     audio_data: str  # base64 encoded audio
     session_context: Optional[Dict[str, Any]] = None
 
+class SpeechToTextRequest(BaseModel):
+    """Request model for speech-to-text processing"""
+    audio_data: str  # base64 encoded audio file
+    assessment_id: str
+    session_id: str
+    language: str = "en"
+    context_prompt: Optional[str] = None
+
+class TranscriptionResponse(BaseModel):
+    """Response model for transcription results"""
+    id: str
+    text: str
+    confidence: float
+    processing_time: float
+    think_aloud_analysis: Optional[Dict[str, Any]] = None
+    created_at: datetime
+
+class ThinkAloudSessionRequest(BaseModel):
+    """Request to start a think-aloud session"""
+    assessment_id: str
+    question_id: str
+    language: str = "en"
+    enable_analysis: bool = True
+
 # ============================================================================
 # AUTHENTICATION UTILITIES
 # ============================================================================
