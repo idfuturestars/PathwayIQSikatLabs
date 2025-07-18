@@ -65,7 +65,7 @@ const ThinkAloudAssessment = () => {
 
   const getNextQuestion = async (sessionId) => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       const response = await axios.get(
         `${backendUrl}/api/adaptive-assessment/${sessionId}/next-question`,
         {
