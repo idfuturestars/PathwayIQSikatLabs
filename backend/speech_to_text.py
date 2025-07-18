@@ -132,7 +132,8 @@ class SpeechToTextProcessor:
     async def _transcribe_with_whisper(self, file_path: str, config: SpeechToTextConfig) -> Any:
         """Transcribe audio using OpenAI Whisper"""
         try:
-            async with aiofiles.open(file_path, 'rb') as audio_file:
+            # Read file synchronously for OpenAI API
+            with open(file_path, 'rb') as audio_file:
                 transcription = await openai_client.audio.transcriptions.create(
                     model=config.model,
                     file=audio_file,
