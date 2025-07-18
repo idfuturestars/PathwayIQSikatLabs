@@ -26,7 +26,7 @@ const SpeechToTextRecorder = ({
   // Start think-aloud session
   const startThinkAloudSession = async () => {
     try {
-      const token = localStorage.getItem('access_token');
+      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${backendUrl}/api/speech-to-text/start-session`,
         {
