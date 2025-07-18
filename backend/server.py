@@ -864,7 +864,7 @@ async def _generate_session_summary(combined_text: str, user_id: str) -> Dict[st
         - session_effectiveness: number (1-5) rating overall session quality
         """
         
-        response = await openai.chat.completions.create(
+        response = await openai_client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are an educational assessment expert analyzing think-aloud sessions."},
