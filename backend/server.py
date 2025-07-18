@@ -388,7 +388,7 @@ async def get_ai_response(messages: List[Dict[str, str]], user_context: Optional
         if user_context:
             system_prompt += f"\nStudent context: Level {user_context.get('level', 1)}, XP: {user_context.get('xp', 0)}"
         
-        response = openai.chat.completions.create(
+        response = await openai_client.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "system", "content": system_prompt}] + messages,
             max_tokens=500,
