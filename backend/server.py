@@ -692,6 +692,213 @@ async def submit_adaptive_answer(
         raise HTTPException(status_code=500, detail="Failed to submit answer")
 
 # ============================================================================
+# AI-POWERED CONTENT GENERATION ENDPOINTS
+# ============================================================================
+
+@api_router.post("/content-generation/generate", response_model=ContentResponse)
+async def generate_content(
+    request: ContentGenerationRequestModel,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate AI-powered educational content"""
+    try:
+        # Get content generator
+        generator = get_content_generator(db)
+        
+        # Create content generation request
+        content_request = ContentGenerationRequest(
+            content_type=request.content_type,
+            subject=request.subject,
+            topic=request.topic,
+            difficulty_level=request.difficulty_level,
+            learning_objectives=request.learning_objectives,
+            target_audience=request.target_audience,
+            length=request.length,
+            personalization_data=None if not request.personalization_enabled else {"user_id": current_user.id},
+            context_prompt=request.context_prompt
+        )
+        
+        # Generate content
+        generated_content = await generator.generate_content(content_request, current_user.id)
+        
+        # Return response
+        return ContentResponse(
+            id=generated_content.id,
+            content_type=generated_content.content_type,
+            subject=generated_content.subject,
+            topic=generated_content.topic,
+            title=generated_content.title,
+            content=generated_content.content,
+            metadata=generated_content.metadata,
+            created_at=generated_content.created_at,
+            quality_score=generated_content.quality_score
+        )
+        
+    except Exception as e:
+        logger.error(f"Content generation error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
+
+@api_router.get("/content-generation/user-content")
+async def get_user_content(
+    current_user: User = Depends(get_current_user),
+    content_type: Optional[str] = None,
+    limit: int = 20
+):
+    """Get user's generated content"""
+    try:
+        generator = get_content_generator(db)
+        contents = await generator.get_user_content(current_user.id, content_type, limit)
+        
+        return {
+            "contents": [
+                {
+                    "id": content.id,
+                    "content_type": content.content_type,
+                    "subject": content.subject,
+                    "topic": content.topic,
+                    "title": content.title,
+                    "created_at": content.created_at,
+                    "quality_score": content.quality_score,
+                    "usage_count": content.usage_count
+                }
+                for content in contents
+            ],
+            "total": len(contents)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving user content: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve content")
+
+@api_router.get("/content-generation/content/{content_id}")
+async def get_content_by_id(
+    content_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get specific content by ID"""
+    try:
+        generator = get_content_generator(db)
+        content = await generator.get_content_by_id(content_id, current_user.id)
+        
+        if not content:
+            raise HTTPException(status_code=404, detail="Content not found")
+        
+        # Increment usage count
+        await db.generated_content.update_one(
+            {"id": content_id, "user_id": current_user.id},
+            {"$inc": {"usage_count": 1}}
+        )
+        
+        return {
+            "id": content.id,
+            "content_type": content.content_type,
+            "subject": content.subject,
+            "topic": content.topic,
+            "title": content.title,
+            "content": content.content,
+            "metadata": content.metadata,
+            "created_at": content.created_at,
+            "quality_score": content.quality_score,
+            "usage_count": content.usage_count + 1
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving content: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve content")
+
+@api_router.get("/content-generation/content-types")
+async def get_content_types(current_user: User = Depends(get_current_user)):
+    """Get available content types"""
+    content_types = [
+        {
+            "id": "quiz",
+            "name": "Quiz",
+            "description": "Interactive quizzes with multiple question types",
+            "icon": "🧠"
+        },
+        {
+            "id": "lesson",
+            "name": "Lesson",
+            "description": "Comprehensive lesson plans with activities",
+            "icon": "📚"
+        },
+        {
+            "id": "explanation",
+            "name": "Explanation",
+            "description": "Clear explanations of complex topics",
+            "icon": "💡"
+        },
+        {
+            "id": "practice_problems",
+            "name": "Practice Problems",
+            "description": "Practice problems with step-by-step solutions",
+            "icon": "📝"
+        },
+        {
+            "id": "study_guide",
+            "name": "Study Guide",
+            "description": "Comprehensive study guides for exam preparation",
+            "icon": "📖"
+        },
+        {
+            "id": "flashcards",
+            "name": "Flashcards",
+            "description": "Flashcards for memorization and review",
+            "icon": "🃏"
+        }
+    ]
+    
+    return {"content_types": content_types}
+
+@api_router.post("/content-generation/regenerate/{content_id}")
+async def regenerate_content(
+    content_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Regenerate existing content with improvements"""
+    try:
+        generator = get_content_generator(db)
+        existing_content = await generator.get_content_by_id(content_id, current_user.id)
+        
+        if not existing_content:
+            raise HTTPException(status_code=404, detail="Content not found")
+        
+        # Create new request based on existing content
+        regeneration_request = ContentGenerationRequest(
+            content_type=existing_content.content_type,
+            subject=existing_content.subject,
+            topic=existing_content.topic,
+            difficulty_level=existing_content.difficulty_level,
+            learning_objectives=existing_content.metadata.get("learning_objectives", []),
+            target_audience=existing_content.metadata.get("target_audience", "8th grade students"),
+            length=existing_content.metadata.get("length", "medium"),
+            context_prompt=f"Improve and enhance the previous version of this content. Make it more engaging and comprehensive."
+        )
+        
+        # Generate new content
+        new_content = await generator.generate_content(regeneration_request, current_user.id)
+        
+        return ContentResponse(
+            id=new_content.id,
+            content_type=new_content.content_type,
+            subject=new_content.subject,
+            topic=new_content.topic,
+            title=new_content.title,
+            content=new_content.content,
+            metadata=new_content.metadata,
+            created_at=new_content.created_at,
+            quality_score=new_content.quality_score
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Content regeneration error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Content regeneration failed")
+
+# ============================================================================
 # SPEECH-TO-TEXT ENDPOINTS FOR THINK-ALOUD ASSESSMENTS
 # ============================================================================
 
