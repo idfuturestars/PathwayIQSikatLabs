@@ -123,15 +123,18 @@ backend:
 frontend:
   - task: "Speech-to-Text Frontend Implementation"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/frontend/src/components/SpeechToTextRecorder.js, /app/frontend/src/pages/ThinkAloudAssessment.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         -working: "NA"
         -agent: "main"
         -comment: "Implemented React components for Speech-to-Text recording and Think-Aloud Assessment page. Added navigation menu integration. Need frontend testing to verify functionality."
+        -working: false
+        -agent: "testing"
+        -comment: "❌ CRITICAL AUTHENTICATION BUG IDENTIFIED: Think-Aloud Assessment page loads correctly with all UI components (navigation working, page title visible, Speech-to-Text recorder component present, instructions visible), but fails to initialize assessment due to JWT token storage mismatch. AuthContext stores token as 'token' in localStorage but Think-Aloud components look for 'access_token', causing 401 Unauthorized errors on /api/adaptive-assessment/start endpoint. FRONTEND COMPONENTS WORKING: ✅ Navigation integration (Think-Aloud Assessment in menu), ✅ Page routing (/think-aloud-assessment), ✅ UI components render correctly, ✅ Speech-to-Text recorder component displays, ✅ Responsive design functional, ✅ Error handling shows 'Failed to initialize assessment'. BACKEND API WORKING: ✅ Adaptive assessment endpoints exist, ✅ Authentication system functional, ✅ API returns proper responses when authenticated. ROOT CAUSE: localStorage key mismatch - AuthContext uses 'token' but components use 'access_token'. FIX REQUIRED: Standardize localStorage token key across all components."
   - task: "Authentication Flow - Login Page"
     implemented: true
     working: true
