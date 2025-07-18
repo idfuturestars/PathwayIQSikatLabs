@@ -476,16 +476,466 @@ def test_api_keys_configuration():
             else:
                 print_result(False, f"{key} is missing from configuration")
         
-        # Verify database name is pathwayiq_database
-        if 'DB_NAME="pathwayiq_database"' in env_content:
-            print_result(True, "Database name is correctly set to 'pathwayiq_database'")
+        # Verify database name is idfs_pathwayiq_database
+        if 'DB_NAME="idfs_pathwayiq_database"' in env_content:
+            print_result(True, "Database name is correctly set to 'idfs_pathwayiq_database'")
         else:
-            print_result(False, "Database name is not set to 'pathwayiq_database'")
+            print_result(False, "Database name is not set to 'idfs_pathwayiq_database'")
             
         return True
         
     except Exception as e:
         print_result(False, f"API keys configuration test failed: {e}")
+        return False
+
+def test_speech_to_text_start_session():
+    """Test POST /api/speech-to-text/start-session"""
+    print_test_header("Speech-to-Text Start Session")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        session_request = {
+            "assessment_id": f"test_assessment_{uuid.uuid4().hex[:8]}",
+            "question_id": f"test_question_{uuid.uuid4().hex[:8]}",
+            "language": "en",
+            "enable_analysis": True
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/speech-to-text/start-session",
+            json=session_request,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Think-aloud session started successfully")
+            
+            # Check response structure
+            expected_fields = ["session_id", "status", "message", "instructions"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Verify session status
+            if data.get("status") == "active":
+                print_result(True, "Session status is 'active'")
+            else:
+                print_result(False, f"Unexpected session status: {data.get('status')}")
+            
+            print(f"   Session ID: {data.get('session_id')}")
+            print(f"   Instructions: {data.get('instructions', '')[:100]}...")
+            
+            # Store session ID for subsequent tests
+            global test_session_id
+            test_session_id = data.get('session_id')
+            
+            return True
+        else:
+            print_result(False, f"Start session failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Start session failed with exception: {e}")
+        return False
+
+def test_speech_to_text_transcribe():
+    """Test POST /api/speech-to-text/transcribe with mock audio data"""
+    print_test_header("Speech-to-Text Transcribe")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        # Create mock base64 audio data (minimal WAV file)
+        # This is a minimal WAV header + silence for testing
+        wav_header = b'RIFF$\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00D\xac\x00\x00\x88X\x01\x00\x02\x00\x10\x00data\x00\x00\x00\x00'
+        mock_audio_data = base64.b64encode(wav_header).decode('utf-8')
+        
+        transcribe_request = {
+            "audio_data": mock_audio_data,
+            "assessment_id": f"test_assessment_{uuid.uuid4().hex[:8]}",
+            "session_id": f"test_session_{uuid.uuid4().hex[:8]}",
+            "language": "en",
+            "context_prompt": "This is a think-aloud assessment for mathematics problem solving."
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/speech-to-text/transcribe",
+            json=transcribe_request,
+            headers=headers,
+            timeout=30  # Longer timeout for OpenAI API
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Audio transcription successful")
+            
+            # Check response structure
+            expected_fields = ["id", "text", "confidence", "processing_time", "created_at"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Check if think-aloud analysis is present
+            if "think_aloud_analysis" in data and data["think_aloud_analysis"]:
+                print_result(True, "Think-aloud analysis included in response")
+                analysis = data["think_aloud_analysis"]
+                if isinstance(analysis, dict):
+                    analysis_keys = ["strategy", "confidence", "metacognition"]
+                    for key in analysis_keys:
+                        if key in analysis:
+                            print_result(True, f"Analysis contains {key}")
+                        else:
+                            print_result(False, f"Analysis missing {key}")
+            else:
+                print_result(True, "Think-aloud analysis not present (expected for minimal audio)")
+            
+            print(f"   Transcription ID: {data.get('id')}")
+            print(f"   Text: {data.get('text', 'No text')}")
+            print(f"   Confidence: {data.get('confidence', 0)}")
+            print(f"   Processing Time: {data.get('processing_time', 0):.3f}s")
+            
+            return True
+        else:
+            print_result(False, f"Transcription failed with status {response.status_code}", response.text)
+            # Check for specific error types
+            if response.status_code == 400:
+                print("🔍 DIAGNOSIS: Invalid audio data or request format")
+            elif response.status_code == 500:
+                print("🔍 DIAGNOSIS: Server error - check OpenAI API key and backend logs")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Transcription failed with exception: {e}")
+        return False
+
+def test_speech_to_text_get_user_sessions():
+    """Test GET /api/speech-to-text/user/sessions"""
+    print_test_header("Speech-to-Text Get User Sessions")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/speech-to-text/user/sessions?limit=10",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "User sessions retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["sessions", "total"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            sessions = data.get("sessions", [])
+            total = data.get("total", 0)
+            
+            print(f"   Total sessions: {total}")
+            print(f"   Sessions returned: {len(sessions)}")
+            
+            # If we have sessions, check their structure
+            if sessions:
+                session = sessions[0]
+                session_fields = ["id", "user_id", "assessment_id", "created_at", "status"]
+                for field in session_fields:
+                    if field in session:
+                        print_result(True, f"Session contains {field}")
+                    else:
+                        print_result(False, f"Session missing {field}")
+            
+            return True
+        else:
+            print_result(False, f"Get user sessions failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get user sessions failed with exception: {e}")
+        return False
+
+def test_speech_to_text_session_transcriptions():
+    """Test GET /api/speech-to-text/session/{session_id}/transcriptions"""
+    print_test_header("Speech-to-Text Session Transcriptions")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test session ID if available, otherwise create a dummy one
+    session_id = globals().get('test_session_id', f'test_session_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/speech-to-text/session/{session_id}/transcriptions",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Session transcriptions retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["session_id", "transcriptions", "total_transcriptions"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            transcriptions = data.get("transcriptions", [])
+            total = data.get("total_transcriptions", 0)
+            
+            print(f"   Session ID: {data.get('session_id')}")
+            print(f"   Total transcriptions: {total}")
+            print(f"   Transcriptions returned: {len(transcriptions)}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Session not found (expected for test session)")
+            return True
+        else:
+            print_result(False, f"Get session transcriptions failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get session transcriptions failed with exception: {e}")
+        return False
+
+def test_speech_to_text_end_session():
+    """Test POST /api/speech-to-text/session/{session_id}/end"""
+    print_test_header("Speech-to-Text End Session")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test session ID if available, otherwise create a dummy one
+    session_id = globals().get('test_session_id', f'test_session_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/speech-to-text/session/{session_id}/end",
+            headers=headers,
+            timeout=15  # Longer timeout for summary generation
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Session ended successfully")
+            
+            # Check response structure
+            expected_fields = ["session_id", "status", "summary", "total_transcriptions", "message"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Verify session status
+            if data.get("status") == "completed":
+                print_result(True, "Session status is 'completed'")
+            else:
+                print_result(False, f"Unexpected session status: {data.get('status')}")
+            
+            # Check summary structure if present
+            summary = data.get("summary")
+            if summary and isinstance(summary, dict):
+                summary_keys = ["overall_strategy", "confidence_progression", "learning_insights"]
+                for key in summary_keys:
+                    if key in summary:
+                        print_result(True, f"Summary contains {key}")
+                    else:
+                        print_result(False, f"Summary missing {key}")
+            
+            print(f"   Session ID: {data.get('session_id')}")
+            print(f"   Total transcriptions: {data.get('total_transcriptions', 0)}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Session not found (expected for test session)")
+            return True
+        else:
+            print_result(False, f"End session failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"End session failed with exception: {e}")
+        return False
+
+def test_speech_to_text_authentication():
+    """Test speech-to-text endpoints without authentication"""
+    print_test_header("Speech-to-Text Authentication Test")
+    
+    try:
+        # Test transcribe endpoint without auth
+        transcribe_request = {
+            "audio_data": "dGVzdA==",  # base64 "test"
+            "assessment_id": "test",
+            "session_id": "test",
+            "language": "en"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/speech-to-text/transcribe",
+            json=transcribe_request,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code == 401:
+            print_result(True, "Transcribe endpoint properly requires authentication")
+        else:
+            print_result(False, f"Transcribe endpoint should return 401, got {response.status_code}")
+        
+        # Test start session endpoint without auth
+        session_request = {
+            "assessment_id": "test",
+            "question_id": "test",
+            "language": "en"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/speech-to-text/start-session",
+            json=session_request,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code == 401:
+            print_result(True, "Start session endpoint properly requires authentication")
+        else:
+            print_result(False, f"Start session endpoint should return 401, got {response.status_code}")
+        
+        # Test user sessions endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/speech-to-text/user/sessions",
+            timeout=10
+        )
+        
+        if response.status_code == 401:
+            print_result(True, "User sessions endpoint properly requires authentication")
+            return True
+        else:
+            print_result(False, f"User sessions endpoint should return 401, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Authentication test failed with exception: {e}")
+        return False
+
+def test_speech_to_text_error_handling():
+    """Test speech-to-text error handling"""
+    print_test_header("Speech-to-Text Error Handling")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test with invalid audio data
+        invalid_request = {
+            "audio_data": "invalid_base64_data",
+            "assessment_id": "test",
+            "session_id": "test",
+            "language": "en"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/speech-to-text/transcribe",
+            json=invalid_request,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code in [400, 422, 500]:
+            print_result(True, f"Invalid audio data properly rejected with status {response.status_code}")
+        else:
+            print_result(False, f"Invalid audio data should be rejected, got {response.status_code}")
+        
+        # Test with missing required fields
+        incomplete_request = {
+            "audio_data": "dGVzdA==",
+            # Missing assessment_id, session_id
+            "language": "en"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/speech-to-text/transcribe",
+            json=incomplete_request,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code in [400, 422]:
+            print_result(True, f"Missing required fields properly rejected with status {response.status_code}")
+        else:
+            print_result(False, f"Missing required fields should be rejected, got {response.status_code}")
+        
+        # Test with invalid session ID for transcriptions
+        response = requests.get(
+            f"{API_BASE}/speech-to-text/session/invalid_session_id/transcriptions",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 404:
+            print_result(True, "Invalid session ID properly returns 404")
+            return True
+        else:
+            print_result(False, f"Invalid session ID should return 404, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Error handling test failed with exception: {e}")
         return False
 
 def run_all_tests():
