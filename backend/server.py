@@ -692,6 +692,49 @@ async def submit_adaptive_answer(
                 {"$set": {"xp": new_xp, "level": new_level}}
             )
         
+        # Check for achievement unlocks (gamification system)
+        try:
+            gamification = get_gamification_engine(db)
+            leaderboard = get_leaderboard_system(db)
+            
+            # Prepare event data for achievement checking
+            event_data = {
+                "assessment_completed": is_correct,
+                "answer_submitted": True,
+                "points_earned": points_earned,
+                "perfect_score": is_correct and points_earned > 0,
+                "think_aloud_used": bool(think_aloud_dict),
+                "ai_help_used": answer_data.ai_help_used,
+                "response_time": answer_data.response_time_seconds
+            }
+            
+            # Check and update achievements
+            achievement_result = await gamification.check_user_achievements(current_user.id, event_data)
+            
+            # Update leaderboards
+            await leaderboard.update_user_score(current_user.id, LeaderboardCategory.OVERALL, {
+                "score": new_xp if is_correct else current_user.xp,
+                "assessments_completed": True
+            })
+            await leaderboard.update_user_score(current_user.id, LeaderboardCategory.WEEKLY, {
+                "assessment_completed": True,
+                "points_earned": points_earned
+            })
+            await leaderboard.update_user_score(current_user.id, LeaderboardCategory.MONTHLY, {
+                "assessment_completed": True, 
+                "points_earned": points_earned
+            })
+            
+            # Update assessment speed leaderboard if fast
+            if answer_data.response_time_seconds < 60:  # Under 1 minute
+                await leaderboard.update_user_score(current_user.id, LeaderboardCategory.ASSESSMENT_SPEED, {
+                    "completion_time": answer_data.response_time_seconds
+                })
+            
+        except Exception as gamification_error:
+            logger.warning(f"Gamification update failed: {str(gamification_error)}")
+            # Don't fail the main request if gamification fails
+        
         # Determine new grade level estimate
         new_grade_level = adaptive_engine.determine_grade_level(ability_after)
         
