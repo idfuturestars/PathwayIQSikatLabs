@@ -711,6 +711,275 @@ async def submit_adaptive_answer(
         raise HTTPException(status_code=500, detail="Failed to submit answer")
 
 # ============================================================================
+# GAMIFICATION ENDPOINTS - BADGES AND ACHIEVEMENTS
+# ============================================================================
+
+@api_router.get("/gamification/badges/user")
+async def get_user_badges(current_user: User = Depends(get_current_user)):
+    """Get all badges and achievements for current user"""
+    try:
+        gamification = get_gamification_engine(db)
+        
+        # Initialize gamification system if not already done
+        await gamification.initialize()
+        
+        badges_data = await gamification.get_user_badges(current_user.id)
+        
+        return {
+            "success": True,
+            "data": badges_data
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting user badges: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get user badges")
+
+@api_router.get("/gamification/notifications")
+async def get_achievement_notifications(
+    current_user: User = Depends(get_current_user),
+    limit: int = 50
+):
+    """Get recent achievement notifications"""
+    try:
+        gamification = get_gamification_engine(db)
+        notifications = await gamification.get_achievement_notifications(current_user.id, limit)
+        
+        return {
+            "success": True,
+            "notifications": notifications,
+            "total": len(notifications)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting achievement notifications: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get notifications")
+
+@api_router.post("/gamification/notifications/read")
+async def mark_notifications_read(
+    request: BadgeNotificationRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Mark achievement notifications as read"""
+    try:
+        gamification = get_gamification_engine(db)
+        await gamification.mark_notifications_read(current_user.id, request.notification_ids)
+        
+        return {
+            "success": True,
+            "message": "Notifications marked as read"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error marking notifications as read: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to mark notifications as read")
+
+@api_router.get("/gamification/badges/definitions")
+async def get_badge_definitions(current_user: User = Depends(get_current_user)):
+    """Get all available badge definitions"""
+    try:
+        badges = await db.badge_definitions.find({"active": True}).to_list(None)
+        
+        return {
+            "success": True,
+            "badges": badges,
+            "total": len(badges)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting badge definitions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get badge definitions")
+
+# ============================================================================
+# LEADERBOARD ENDPOINTS
+# ============================================================================
+
+@api_router.get("/leaderboard/categories")
+async def get_leaderboard_categories(current_user: User = Depends(get_current_user)):
+    """Get all available leaderboard categories"""
+    categories = [
+        {
+            "id": "overall",
+            "name": "Overall",
+            "description": "Total points from all activities",
+            "icon": "🏆"
+        },
+        {
+            "id": "weekly",
+            "name": "This Week",
+            "description": "Points earned this week",
+            "icon": "📅"
+        },
+        {
+            "id": "monthly",
+            "name": "This Month", 
+            "description": "Points earned this month",
+            "icon": "🗓️"
+        },
+        {
+            "id": "think_aloud",
+            "name": "Think-Aloud Master",
+            "description": "Best think-aloud performance",
+            "icon": "🎤"
+        },
+        {
+            "id": "content_creation",
+            "name": "Content Creator",
+            "description": "AI content generation points",
+            "icon": "📝"
+        },
+        {
+            "id": "assessment_speed",
+            "name": "Speed Demon",
+            "description": "Fastest assessment completion",
+            "icon": "⚡"
+        },
+        {
+            "id": "streak",
+            "name": "Streak Master",
+            "description": "Longest learning streaks",
+            "icon": "🔥"
+        },
+        {
+            "id": "badges",
+            "name": "Badge Collector",
+            "description": "Most badges earned",
+            "icon": "🎖️"
+        }
+    ]
+    
+    return {
+        "success": True,
+        "categories": categories
+    }
+
+@api_router.get("/leaderboard/{category}")
+async def get_leaderboard(
+    category: str,
+    current_user: User = Depends(get_current_user),
+    limit: int = 100,
+    offset: int = 0
+):
+    """Get leaderboard for specific category"""
+    try:
+        leaderboard = get_leaderboard_system(db)
+        
+        # Initialize leaderboard system if not already done
+        await leaderboard.initialize()
+        
+        # Validate category
+        try:
+            category_enum = LeaderboardCategory(category)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid leaderboard category")
+        
+        leaderboard_data = await leaderboard.get_leaderboard(category_enum, limit, offset)
+        
+        return {
+            "success": True,
+            "data": leaderboard_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting leaderboard: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get leaderboard")
+
+@api_router.get("/leaderboard/{category}/user-ranking")
+async def get_user_ranking(
+    category: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user's ranking in specific category"""
+    try:
+        leaderboard = get_leaderboard_system(db)
+        
+        # Validate category
+        try:
+            category_enum = LeaderboardCategory(category)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid leaderboard category")
+        
+        ranking_data = await leaderboard.get_user_ranking(current_user.id, category_enum)
+        
+        return {
+            "success": True,
+            "data": ranking_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user ranking: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get user ranking")
+
+@api_router.get("/competitions/active")
+async def get_active_competitions(current_user: User = Depends(get_current_user)):
+    """Get all active competitions"""
+    try:
+        leaderboard = get_leaderboard_system(db)
+        competitions = await leaderboard.get_active_competitions()
+        
+        return {
+            "success": True,
+            "competitions": competitions,
+            "total": len(competitions)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting active competitions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get active competitions")
+
+@api_router.post("/competitions/join")
+async def join_competition(
+    request: CompetitionJoinRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Join a competition"""
+    try:
+        leaderboard = get_leaderboard_system(db)
+        result = await leaderboard.join_competition(current_user.id, request.competition_id)
+        
+        if result["success"]:
+            return {
+                "success": True,
+                "message": result["message"]
+            }
+        else:
+            raise HTTPException(status_code=400, detail=result["error"])
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error joining competition: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to join competition")
+
+@api_router.get("/competitions/{competition_id}/leaderboard")
+async def get_competition_leaderboard(
+    competition_id: str,
+    current_user: User = Depends(get_current_user),
+    limit: int = 100
+):
+    """Get leaderboard for specific competition"""
+    try:
+        leaderboard = get_leaderboard_system(db)
+        leaderboard_data = await leaderboard.get_competition_leaderboard(competition_id, limit)
+        
+        if "error" in leaderboard_data:
+            raise HTTPException(status_code=404, detail=leaderboard_data["error"])
+        
+        return {
+            "success": True,
+            "data": leaderboard_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting competition leaderboard: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get competition leaderboard")
+
+# ============================================================================
 # AI-POWERED CONTENT GENERATION ENDPOINTS
 # ============================================================================
 
