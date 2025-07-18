@@ -34,6 +34,10 @@ from speech_to_text import get_speech_processor, SpeechToTextConfig
 # Import content generation module
 from content_generator import get_content_generator, ContentGenerationRequest
 
+# Import gamification modules
+from gamification_engine import get_gamification_engine
+from leaderboard_system import get_leaderboard_system, LeaderboardCategory
+
 # Import adaptive engine
 import sys
 import os
