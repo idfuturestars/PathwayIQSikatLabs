@@ -60,7 +60,10 @@ REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
 # Initialize clients
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
-openai.api_key = OPENAI_API_KEY
+
+# Initialize OpenAI client
+from openai import AsyncOpenAI
+openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
