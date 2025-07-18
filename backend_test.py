@@ -1582,10 +1582,25 @@ def run_all_tests():
     test_results['api_keys'] = test_api_keys_configuration()
     
     # Authentication tests
-    test_results['demo_login'] = test_demo_login()  # Use demo login for speech-to-text tests
+    test_results['demo_login'] = test_demo_login()  # Use demo login for all tests
     test_results['database'] = test_database_connection()
     
-    # Speech-to-Text tests (main focus of this testing session)
+    # AI Content Generation tests (main focus of this testing session)
+    print(f"\n{'='*60}")
+    print("🤖 AI CONTENT GENERATION FUNCTIONALITY TESTING")
+    print(f"{'='*60}")
+    
+    test_results['content_auth'] = test_content_generation_authentication()
+    test_results['content_types'] = test_content_generation_get_content_types()
+    test_results['content_quiz'] = test_content_generation_quiz()
+    test_results['content_lesson'] = test_content_generation_lesson()
+    test_results['content_explanation'] = test_content_generation_explanation()
+    test_results['content_user_content'] = test_content_generation_get_user_content()
+    test_results['content_by_id'] = test_content_generation_get_content_by_id()
+    test_results['content_regenerate'] = test_content_generation_regenerate()
+    test_results['content_error_handling'] = test_content_generation_error_handling()
+    
+    # Speech-to-Text tests (previously tested)
     print(f"\n{'='*60}")
     print("🎤 SPEECH-TO-TEXT FUNCTIONALITY TESTING")
     print(f"{'='*60}")
@@ -1612,6 +1627,8 @@ def run_all_tests():
     
     # Group results by category
     basic_tests = ['health', 'root', 'api_keys', 'demo_login', 'database']
+    content_tests = ['content_auth', 'content_types', 'content_quiz', 'content_lesson', 'content_explanation', 
+                     'content_user_content', 'content_by_id', 'content_regenerate', 'content_error_handling']
     stt_tests = ['stt_authentication', 'stt_start_session', 'stt_transcribe', 'stt_user_sessions', 
                  'stt_session_transcriptions', 'stt_end_session', 'stt_error_handling']
     other_tests = ['adaptive_assessment', 'ai_chat']
@@ -1622,6 +1639,15 @@ def run_all_tests():
             status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
             print(f"  {status} {test_name.replace('_', ' ').title()}")
     
+    print("\n🤖 AI CONTENT GENERATION FUNCTIONALITY:")
+    content_passed = 0
+    for test_name in content_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('content_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                content_passed += 1
+    
     print("\n🎤 SPEECH-TO-TEXT FUNCTIONALITY:")
     stt_passed = 0
     for test_name in stt_tests:
@@ -1631,20 +1657,31 @@ def run_all_tests():
             if test_results[test_name]:
                 stt_passed += 1
     
-    print("\n🤖 AI & ASSESSMENT FUNCTIONALITY:")
+    print("\n🧠 AI & ASSESSMENT FUNCTIONALITY:")
     for test_name in other_tests:
         if test_name in test_results:
             status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
             print(f"  {status} {test_name.replace('_', ' ').title()}")
     
     print(f"\n🎯 Overall Result: {passed}/{total} tests passed")
+    print(f"🤖 AI Content Generation Result: {content_passed}/{len(content_tests)} tests passed")
     print(f"🎤 Speech-to-Text Result: {stt_passed}/{len(stt_tests)} tests passed")
     
     if passed == total:
-        print("🎉 All tests passed! PathwayIQ backend with Speech-to-Text is working correctly.")
+        print("🎉 All tests passed! PathwayIQ backend with AI Content Generation is working correctly.")
         return True
     else:
         print("⚠️  Some tests failed. Please check the details above.")
+        
+        # Specific feedback for AI content generation
+        if content_passed < len(content_tests):
+            print(f"🤖 AI Content Generation Status: {content_passed}/{len(content_tests)} tests passed")
+            if content_passed == 0:
+                print("❌ CRITICAL: AI Content Generation functionality is not working")
+            elif content_passed < len(content_tests) // 2:
+                print("⚠️  WARNING: Major issues with AI Content Generation functionality")
+            else:
+                print("⚠️  MINOR: Some AI Content Generation features have issues")
         
         # Specific feedback for speech-to-text
         if stt_passed < len(stt_tests):
