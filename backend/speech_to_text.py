@@ -91,8 +91,11 @@ class SpeechToTextProcessor:
                     temp_file_path, config
                 )
                 
-                # Extract text and metadata
-                transcription_text = transcription_response.text
+                # Extract text - when response_format="text", OpenAI returns string directly
+                if isinstance(transcription_response, str):
+                    transcription_text = transcription_response
+                else:
+                    transcription_text = getattr(transcription_response, 'text', str(transcription_response))
                 
                 # Create transcription result
                 result = TranscriptionResult(
