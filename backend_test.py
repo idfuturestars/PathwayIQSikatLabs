@@ -559,10 +559,32 @@ def test_speech_to_text_transcribe():
         return False
     
     try:
-        # Create mock base64 audio data (minimal WAV file)
-        # This is a minimal WAV header + silence for testing
-        wav_header = b'RIFF$\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00D\xac\x00\x00\x88X\x01\x00\x02\x00\x10\x00data\x00\x00\x00\x00'
-        mock_audio_data = base64.b64encode(wav_header).decode('utf-8')
+        # Create mock base64 audio data (longer WAV file for OpenAI minimum requirement)
+        # Create a 0.2 second WAV file with silence
+        sample_rate = 44100
+        duration = 0.2  # seconds
+        samples = int(sample_rate * duration)
+        
+        # WAV header for 16-bit mono audio
+        wav_header = b'RIFF'
+        wav_header += (36 + samples * 2).to_bytes(4, 'little')  # File size
+        wav_header += b'WAVE'
+        wav_header += b'fmt '
+        wav_header += (16).to_bytes(4, 'little')  # Subchunk1Size
+        wav_header += (1).to_bytes(2, 'little')   # AudioFormat (PCM)
+        wav_header += (1).to_bytes(2, 'little')   # NumChannels (mono)
+        wav_header += sample_rate.to_bytes(4, 'little')  # SampleRate
+        wav_header += (sample_rate * 2).to_bytes(4, 'little')  # ByteRate
+        wav_header += (2).to_bytes(2, 'little')   # BlockAlign
+        wav_header += (16).to_bytes(2, 'little')  # BitsPerSample
+        wav_header += b'data'
+        wav_header += (samples * 2).to_bytes(4, 'little')  # Subchunk2Size
+        
+        # Add silence data (zeros)
+        silence_data = b'\x00\x00' * samples
+        wav_data = wav_header + silence_data
+        
+        mock_audio_data = base64.b64encode(wav_data).decode('utf-8')
         
         transcribe_request = {
             "audio_data": mock_audio_data,
