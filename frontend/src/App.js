@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import AdaptiveSkillScan from './pages/AdaptiveSkillScan';
 import AIMentor from './pages/AIMentor';
 import ThinkAloudAssessment from './pages/ThinkAloudAssessment';
+import AIContentGenerator from './pages/AIContentGenerator';
 import LoadingScreen from './components/LoadingScreen';
 import './App.css';
 
