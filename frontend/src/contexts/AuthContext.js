@@ -37,8 +37,11 @@ export const AuthProvider = ({ children }) => {
           setUser(response.data);
         } catch (error) {
           console.error('Failed to load user:', error);
-          localStorage.removeItem('token');
-          setToken(null);
+          // Only clear token if it's actually invalid (401), not for other errors
+          if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            setToken(null);
+          }
         }
       }
       setLoading(false);
