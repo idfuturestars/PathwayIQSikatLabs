@@ -32,6 +32,7 @@ const Layout = ({ children }) => {
     { name: 'Dashboard', icon: RocketLaunchIcon, path: '/dashboard', color: '#ff6b6b' },
     { name: 'Adaptive Assessment', icon: BookOpenIcon, path: '/adaptive-assessment', color: '#4ecdc4' },
     { name: 'Think-Aloud Assessment', icon: ChatBubbleLeftRightIcon, path: '/think-aloud-assessment', color: '#45b7d1' },
+    { name: 'AI Content Generator', icon: ChatBubbleLeftRightIcon, path: '/ai-content-generator', color: '#9b59b6' },
     { name: 'AI Mentor', icon: ChatBubbleLeftRightIcon, path: '/ai-mentor', color: '#45b7d1' },
     { name: 'Learning Quests', icon: MapIcon, path: '/learning-quests', color: '#96ceb4' },
     { name: 'Study Groups', icon: UserGroupIcon, path: '/study-groups', color: '#ffd93d' },
