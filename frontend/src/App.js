@@ -90,6 +90,14 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/think-aloud-assessment" 
+            element={
+              <ProtectedRoute>
+                <ThinkAloudAssessment />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Default redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
