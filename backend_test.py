@@ -3267,20 +3267,30 @@ def run_all_tests():
     print(f"🚀 PHASE 2 NEW FEATURES SUCCESS RATE: {phase2_new_passed}/{phase2_new_total} ({phase2_new_passed/phase2_new_total*100:.1f}%)")
     
     if passed == total:
-        print("🎉 All tests passed! PathwayIQ backend with Phase 2 Analytics & Reporting is working correctly.")
+        print("🎉 All tests passed! PathwayIQ backend with complete Phase 2 functionality is working correctly.")
         return True
     else:
         print("⚠️  Some tests failed. Please check the details above.")
         
-        # Specific feedback for Phase 2 features
-        if phase2_passed < phase2_total:
-            print(f"📊 Phase 2 Analytics & Reporting Status: {phase2_passed}/{phase2_total} tests passed")
-            if phase2_passed == 0:
-                print("❌ CRITICAL: Phase 2 Analytics & Reporting functionality is not working")
-            elif phase2_passed < phase2_total // 2:
-                print("⚠️  WARNING: Major issues with Phase 2 Analytics & Reporting functionality")
+        # Specific feedback for Phase 2 NEW features (collaboration, predictive, emotion)
+        if phase2_new_passed < phase2_new_total:
+            print(f"🚀 Phase 2 NEW Features Status: {phase2_new_passed}/{phase2_new_total} tests passed")
+            if phase2_new_passed == 0:
+                print("❌ CRITICAL: Phase 2 NEW features (Collaboration, Predictive, Emotion) are not working")
+            elif phase2_new_passed < phase2_new_total // 2:
+                print("⚠️  WARNING: Major issues with Phase 2 NEW features")
             else:
-                print("⚠️  MINOR: Some Phase 2 Analytics & Reporting features have issues")
+                print("⚠️  MINOR: Some Phase 2 NEW features have issues")
+        
+        # Specific feedback for Phase 2 complete features
+        if phase2_passed < phase2_total:
+            print(f"📊 Phase 2 Complete Status: {phase2_passed}/{phase2_total} tests passed")
+            if phase2_passed == 0:
+                print("❌ CRITICAL: Phase 2 functionality is not working")
+            elif phase2_passed < phase2_total // 2:
+                print("⚠️  WARNING: Major issues with Phase 2 functionality")
+            else:
+                print("⚠️  MINOR: Some Phase 2 features have issues")
         
         # Specific feedback for AI content generation
         if content_passed < len(content_tests):
