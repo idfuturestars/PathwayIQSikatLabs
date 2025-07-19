@@ -53,6 +53,9 @@ from reporting_system import ReportingSystem
 # Import predictive analytics
 from predictive_analytics import PredictiveAnalytics
 
+# Import emotional intelligence
+from emotional_intelligence import get_emotional_intelligence_analyzer
+
 # Import adaptive engine
 import sys
 import os
