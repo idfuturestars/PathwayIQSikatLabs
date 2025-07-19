@@ -2114,7 +2114,476 @@ async def delete_report(
         raise HTTPException(status_code=500, detail="Failed to delete report")
 
 # ============================================================================
-# APPLICATION LIFECYCLE
+# STUDY GROUPS & COLLABORATIVE LEARNING ENDPOINTS - PHASE 2
+# ============================================================================
+
+@api_router.post("/collaboration/groups/create")
+async def create_study_group(
+    group_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new study group"""
+    try:
+        result = collaboration_engine.create_study_group(current_user.id, group_data)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating study group: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create study group")
+
+@api_router.post("/collaboration/groups/{group_id}/join")
+async def join_study_group(
+    group_id: str,
+    join_request: Dict[str, Any] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Join a study group"""
+    try:
+        result = collaboration_engine.join_study_group(current_user.id, group_id, join_request)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error joining study group: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to join study group")
+
+@api_router.get("/collaboration/groups/user")
+async def get_user_groups(
+    current_user: User = Depends(get_current_user),
+    status: str = Query(default="active", regex="^(active|pending|all)$")
+):
+    """Get all groups user belongs to"""
+    try:
+        result = collaboration_engine.get_user_groups(current_user.id, status)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user groups: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get user groups")
+
+@api_router.get("/collaboration/groups/{group_id}")
+async def get_group_details(
+    group_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get detailed information about a study group"""
+    try:
+        result = collaboration_engine.get_group_details(group_id, current_user.id)
+        
+        if "error" in result:
+            status_code = 404 if result["error"] == "Group not found" else 400
+            raise HTTPException(status_code=status_code, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting group details: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get group details")
+
+@api_router.get("/collaboration/groups/search")
+async def search_groups(
+    name: Optional[str] = None,
+    subject: Optional[str] = None,
+    group_type: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Search for study groups"""
+    try:
+        search_params = {}
+        if name:
+            search_params["name"] = name
+        if subject:
+            search_params["subject"] = subject
+        if group_type:
+            search_params["group_type"] = group_type
+        
+        result = collaboration_engine.search_groups(search_params, current_user.id)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error searching groups: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to search groups")
+
+@api_router.post("/collaboration/groups/{group_id}/discussions")
+async def create_discussion(
+    group_id: str,
+    discussion_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Create a discussion in a study group"""
+    try:
+        result = collaboration_engine.create_discussion(group_id, current_user.id, discussion_data)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating discussion: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create discussion")
+
+@api_router.get("/collaboration/groups/{group_id}/discussions")
+async def get_group_discussions(
+    group_id: str,
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(default=20, ge=1, le=100)
+):
+    """Get discussions for a study group"""
+    try:
+        result = collaboration_engine.get_group_discussions(group_id, current_user.id, limit)
+        
+        if "error" in result:
+            status_code = 403 if result["error"] == "Access denied" else 400
+            raise HTTPException(status_code=status_code, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting group discussions: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get discussions")
+
+@api_router.post("/collaboration/groups/{group_id}/projects")
+async def create_group_project(
+    group_id: str,
+    project_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    """Create a collaborative project in a study group"""
+    try:
+        result = collaboration_engine.create_group_project(group_id, current_user.id, project_data)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating group project: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to create project")
+
+@api_router.get("/collaboration/groups/{group_id}/projects")
+async def get_group_projects(
+    group_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get all projects for a study group"""
+    try:
+        result = collaboration_engine.get_group_projects(group_id, current_user.id)
+        
+        if "error" in result:
+            status_code = 403 if result["error"] == "Access denied" else 400
+            raise HTTPException(status_code=status_code, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting group projects: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get projects")
+
+@api_router.get("/collaboration/groups/{group_id}/analytics")
+async def get_collaboration_analytics(
+    group_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get analytics for collaboration in a study group"""
+    try:
+        result = collaboration_engine.get_collaboration_analytics(group_id, current_user.id)
+        
+        if "error" in result:
+            status_code = 403 if result["error"] == "Access denied" else 404 if result["error"] == "Group not found" else 400
+            raise HTTPException(status_code=status_code, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting collaboration analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get collaboration analytics")
+
+@api_router.post("/collaboration/groups/{group_id}/leave")
+async def leave_group(
+    group_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Leave a study group"""
+    try:
+        result = collaboration_engine.leave_group(current_user.id, group_id)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error leaving group: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to leave group")
+
+# ============================================================================
+# PREDICTIVE ANALYTICS ENDPOINTS - PHASE 2
+# ============================================================================
+
+@api_router.get("/predictive/learning-outcomes")
+async def predict_learning_outcomes(
+    current_user: User = Depends(get_current_user),
+    prediction_horizon: int = Query(default=30, ge=7, le=365)
+):
+    """Predict learning outcomes for the user"""
+    try:
+        result = predictive_engine.predict_learning_outcomes(current_user.id, prediction_horizon)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error predicting learning outcomes: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to predict learning outcomes")
+
+@api_router.get("/predictive/risk-assessment")
+async def assess_learning_risk(
+    current_user: User = Depends(get_current_user)
+):
+    """Assess learning risk factors and provide early intervention recommendations"""
+    try:
+        result = predictive_engine.assess_learning_risk(current_user.id)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error assessing learning risk: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to assess learning risk")
+
+@api_router.post("/predictive/skill-mastery")
+async def predict_skill_mastery(
+    skills: List[str],
+    current_user: User = Depends(get_current_user)
+):
+    """Predict when user will master specific skills"""
+    try:
+        if not skills:
+            raise HTTPException(status_code=400, detail="Skills list cannot be empty")
+        
+        result = predictive_engine.predict_skill_mastery(current_user.id, skills)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error predicting skill mastery: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to predict skill mastery")
+
+@api_router.post("/predictive/learning-path")
+async def optimize_learning_path(
+    learning_goals: List[str],
+    time_constraint: Optional[int] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate an optimized learning path based on predictive analytics"""
+    try:
+        if not learning_goals:
+            raise HTTPException(status_code=400, detail="Learning goals cannot be empty")
+        
+        result = predictive_engine.optimize_learning_path(current_user.id, learning_goals, time_constraint)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error optimizing learning path: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to optimize learning path")
+
+@api_router.get("/predictive/student-success")
+async def predict_student_success(
+    current_user: User = Depends(get_current_user),
+    assessment_type: str = Query(default="overall")
+):
+    """Predict overall student success probability"""
+    try:
+        result = predictive_engine.predict_student_success(current_user.id, assessment_type)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error predicting student success: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to predict student success")
+
+# ============================================================================
+# ENHANCED EMOTIONAL INTELLIGENCE ANALYSIS ENDPOINTS - PHASE 2
+# ============================================================================
+
+@api_router.post("/emotion/analyze")
+async def analyze_emotional_state(
+    text_input: str,
+    context: Optional[Dict[str, Any]] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Analyze emotional state from text input"""
+    try:
+        if not text_input.strip():
+            raise HTTPException(status_code=400, detail="Text input cannot be empty")
+        
+        result = emotion_engine.analyze_emotional_state(current_user.id, text_input, context)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing emotional state: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to analyze emotional state")
+
+@api_router.post("/emotion/empathetic-response")
+async def generate_empathetic_response(
+    user_message: str,
+    emotional_context: Optional[Dict[str, Any]] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate empathetic AI response based on user's emotional state"""
+    try:
+        if not user_message.strip():
+            raise HTTPException(status_code=400, detail="User message cannot be empty")
+        
+        result = emotion_engine.generate_empathetic_response(current_user.id, user_message, emotional_context)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating empathetic response: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate empathetic response")
+
+@api_router.get("/emotion/journey")
+async def track_emotional_journey(
+    current_user: User = Depends(get_current_user),
+    time_period: int = Query(default=30, ge=7, le=365)
+):
+    """Track and analyze user's emotional journey over time"""
+    try:
+        result = emotion_engine.track_emotional_journey(current_user.id, time_period)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error tracking emotional journey: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to track emotional journey")
+
+@api_router.get("/emotion/profile")
+async def get_emotional_learning_profile(
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive emotional learning profile for the user"""
+    try:
+        result = emotion_engine.create_emotional_learning_profile(current_user.id)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting emotional learning profile: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get emotional learning profile")
+
+@api_router.post("/emotion/intervention")
+async def provide_emotional_intervention(
+    intervention_type: str,
+    context: Optional[Dict[str, Any]] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Provide targeted emotional intervention and support"""
+    try:
+        # Validate intervention type
+        valid_types = ["encouragement", "reassurance", "celebration", "motivation", "stress_relief", "confidence_building", "patience_support"]
+        if intervention_type not in valid_types:
+            raise HTTPException(status_code=400, detail=f"Invalid intervention type. Valid types: {', '.join(valid_types)}")
+        
+        result = emotion_engine.provide_emotional_intervention(current_user.id, intervention_type, context)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error providing emotional intervention: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to provide emotional intervention")
+
+# ============================================================================
+# ROUTER INCLUSION AND LOGGING CONFIGURATION
 # ============================================================================
 
 @app.on_event("startup")
