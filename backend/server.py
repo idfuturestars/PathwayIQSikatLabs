@@ -44,6 +44,9 @@ from study_groups_engine import StudyGroupsEngine
 # Import email service
 from email_service import email_service
 
+# Import learning analytics
+from learning_analytics import LearningAnalytics
+
 # Import adaptive engine
 import sys
 import os
