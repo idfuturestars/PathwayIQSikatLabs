@@ -1830,6 +1830,11 @@ async def submit_answer(
 analytics_engine = AnalyticsEngine()
 reporting_system = ReportingSystem()
 
+# Initialize collaboration, predictive, and emotion engines
+collaboration_engine = CollaborationEngine()
+predictive_engine = PredictiveEngine()
+emotion_engine = EmotionEngine()
+
 @api_router.get("/analytics/user/performance")
 async def get_user_performance_analytics(
     current_user: User = Depends(get_current_user),
