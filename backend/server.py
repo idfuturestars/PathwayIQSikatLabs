@@ -2425,6 +2425,209 @@ async def get_class_overview(
         logger.error(f"Error getting class overview: {e}")
         raise HTTPException(status_code=500, detail="Failed to get class overview")
 
+# ============================================================================
+# COMPREHENSIVE REPORTING FOR EDUCATORS
+# ============================================================================
+
+class ReportRequest(BaseModel):
+    days: int = 30
+    subject: Optional[str] = None
+    export_format: str = "json"  # json, pdf, csv
+
+class StudentProgressReportRequest(BaseModel):
+    student_id: str
+    days: int = 30
+    export_format: str = "json"
+
+@api_router.post("/reports/student-progress")
+async def generate_student_progress_report(
+    request: StudentProgressReportRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate individual student progress report"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        result = await reporting_system.generate_student_progress_report(
+            educator_id=current_user.id,
+            student_id=request.student_id,
+            days=request.days,
+            export_format=request.export_format
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating student progress report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate report")
+
+@api_router.post("/reports/class-performance")
+async def generate_class_performance_report(
+    request: ReportRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate class performance summary report"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        result = await reporting_system.generate_class_performance_report(
+            educator_id=current_user.id,
+            days=request.days,
+            subject=request.subject,
+            export_format=request.export_format
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating class performance report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate report")
+
+@api_router.post("/reports/subject-analytics")
+async def generate_subject_analytics_report(
+    request: ReportRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate subject-wise performance analysis report"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        result = await reporting_system.generate_subject_analytics_report(
+            educator_id=current_user.id,
+            days=request.days,
+            export_format=request.export_format
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating subject analytics report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate report")
+
+@api_router.get("/reports/available")
+async def get_available_reports(
+    limit: int = 50,
+    current_user: User = Depends(get_current_user)
+):
+    """Get list of previously generated reports"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        reports = await reporting_system.get_available_reports(
+            educator_id=current_user.id,
+            limit=limit
+        )
+        
+        return {
+            "success": True,
+            "reports": reports,
+            "total": len(reports)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting available reports: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get reports")
+
+@api_router.get("/reports/{report_id}")
+async def get_report_by_id(
+    report_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get a specific report by ID"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        result = await reporting_system.get_report_by_id(
+            report_id=report_id,
+            educator_id=current_user.id
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=404, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get report")
+
+@api_router.post("/reports/email")
+async def email_report(
+    report_id: str,
+    recipient_email: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Email a report to specified recipient"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        # Get the report
+        result = await reporting_system.get_report_by_id(
+            report_id=report_id,
+            educator_id=current_user.id
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=404, detail="Report not found")
+        
+        report_data = result["report"]
+        
+        # Send email using email service
+        email_success = await email_service.send_learning_analytics_report(
+            recipient_email=recipient_email,
+            recipient_name="Educator",  # Could be improved with actual name
+            report_data={
+                "report_title": report_data.get("report_type", "Report"),
+                "generated_at": report_data.get("generated_at"),
+                "summary": "Comprehensive learning analytics report from IDFS PathwayIQ™"
+            }
+        )
+        
+        if email_success:
+            return {
+                "success": True,
+                "message": f"Report emailed successfully to {recipient_email}"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send email")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error emailing report: {e}")
+        raise HTTPException(status_code=500, detail="Failed to email report")
+
 # Include the router in the main app
 app.include_router(api_router)
 
