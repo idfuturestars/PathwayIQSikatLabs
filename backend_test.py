@@ -2203,7 +2203,24 @@ def run_all_tests():
     test_results['demo_login'] = test_demo_login()  # Use demo login for all tests
     test_results['database'] = test_database_connection()
     
-    # AI Content Generation tests (main focus of this testing session)
+    # Study Groups & Collaborative Learning tests (main focus of this testing session)
+    print(f"\n{'='*60}")
+    print("👥 STUDY GROUPS & COLLABORATIVE LEARNING FUNCTIONALITY TESTING")
+    print(f"{'='*60}")
+    
+    test_results['study_groups_auth'] = test_study_groups_authentication()
+    test_results['study_groups_create'] = test_study_groups_create()
+    test_results['study_groups_public'] = test_study_groups_get_public()
+    test_results['study_groups_my_groups'] = test_study_groups_get_my_groups()
+    test_results['study_groups_join'] = test_study_groups_join()
+    test_results['study_groups_leave'] = test_study_groups_leave()
+    test_results['study_groups_send_message'] = test_study_groups_send_message()
+    test_results['study_groups_get_messages'] = test_study_groups_get_messages()
+    test_results['study_groups_start_session'] = test_study_groups_start_session()
+    test_results['study_groups_join_session'] = test_study_groups_join_session()
+    test_results['study_groups_analytics'] = test_study_groups_get_analytics()
+    
+    # AI Content Generation tests (previously tested)
     print(f"\n{'='*60}")
     print("🤖 AI CONTENT GENERATION FUNCTIONALITY TESTING")
     print(f"{'='*60}")
@@ -2245,6 +2262,9 @@ def run_all_tests():
     
     # Group results by category
     basic_tests = ['health', 'root', 'api_keys', 'demo_login', 'database']
+    study_groups_tests = ['study_groups_auth', 'study_groups_create', 'study_groups_public', 'study_groups_my_groups',
+                         'study_groups_join', 'study_groups_leave', 'study_groups_send_message', 'study_groups_get_messages',
+                         'study_groups_start_session', 'study_groups_join_session', 'study_groups_analytics']
     content_tests = ['content_auth', 'content_types', 'content_quiz', 'content_lesson', 'content_explanation', 
                      'content_user_content', 'content_by_id', 'content_regenerate', 'content_error_handling']
     stt_tests = ['stt_authentication', 'stt_start_session', 'stt_transcribe', 'stt_user_sessions', 
@@ -2256,6 +2276,15 @@ def run_all_tests():
         if test_name in test_results:
             status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
             print(f"  {status} {test_name.replace('_', ' ').title()}")
+    
+    print("\n👥 STUDY GROUPS & COLLABORATIVE LEARNING:")
+    study_groups_passed = 0
+    for test_name in study_groups_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('study_groups_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                study_groups_passed += 1
     
     print("\n🤖 AI CONTENT GENERATION FUNCTIONALITY:")
     content_passed = 0
@@ -2282,14 +2311,25 @@ def run_all_tests():
             print(f"  {status} {test_name.replace('_', ' ').title()}")
     
     print(f"\n🎯 Overall Result: {passed}/{total} tests passed")
+    print(f"👥 Study Groups Result: {study_groups_passed}/{len(study_groups_tests)} tests passed")
     print(f"🤖 AI Content Generation Result: {content_passed}/{len(content_tests)} tests passed")
     print(f"🎤 Speech-to-Text Result: {stt_passed}/{len(stt_tests)} tests passed")
     
     if passed == total:
-        print("🎉 All tests passed! PathwayIQ backend with AI Content Generation is working correctly.")
+        print("🎉 All tests passed! PathwayIQ backend with Study Groups & Collaborative Learning is working correctly.")
         return True
     else:
         print("⚠️  Some tests failed. Please check the details above.")
+        
+        # Specific feedback for Study Groups
+        if study_groups_passed < len(study_groups_tests):
+            print(f"👥 Study Groups Status: {study_groups_passed}/{len(study_groups_tests)} tests passed")
+            if study_groups_passed == 0:
+                print("❌ CRITICAL: Study Groups & Collaborative Learning functionality is not working")
+            elif study_groups_passed < len(study_groups_tests) // 2:
+                print("⚠️  WARNING: Major issues with Study Groups & Collaborative Learning functionality")
+            else:
+                print("⚠️  MINOR: Some Study Groups & Collaborative Learning features have issues")
         
         # Specific feedback for AI content generation
         if content_passed < len(content_tests):
