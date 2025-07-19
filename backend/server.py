@@ -2497,14 +2497,16 @@ async def analyze_emotional_state(
 
 @api_router.post("/emotion/empathetic-response")
 async def generate_empathetic_response(
-    user_message: str,
-    emotional_context: Optional[Dict[str, Any]] = None,
+    request_data: Dict[str, Any],
     current_user: User = Depends(get_current_user)
 ):
     """Generate empathetic AI response based on user's emotional state"""
     try:
-        if not user_message.strip():
-            raise HTTPException(status_code=400, detail="User message cannot be empty")
+        user_message = request_data.get("user_message")
+        if not user_message or not user_message.strip():
+            raise HTTPException(status_code=400, detail="user_message is required and cannot be empty")
+        
+        emotional_context = request_data.get("emotional_context")
         
         result = emotion_engine.generate_empathetic_response(current_user.id, user_message, emotional_context)
         
