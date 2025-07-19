@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 class StudyGroupsEngine:
     def __init__(self, mongo_url: str, redis_url: str = "redis://localhost:6379"):
         self.client = MongoClient(mongo_url)
-        self.db = self.client.get_database()
+        # Get database name from environment
+        db_name = os.getenv('DB_NAME', 'idfs_pathwayiq_database')
+        self.db = self.client[db_name]
         self.redis_client = redis.Redis.from_url(redis_url, decode_responses=True)
         
         # Collections
