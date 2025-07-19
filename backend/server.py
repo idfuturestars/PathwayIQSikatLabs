@@ -2160,3 +2160,18 @@ async def shutdown_event():
         logger.warning(f"⚠️ Cache cleanup warning: {e}")
     
     logger.info("✅ PathwayIQ API shutdown complete")
+
+# ============================================================================
+# ROUTER INCLUSION AND LOGGING CONFIGURATION
+# ============================================================================
+
+# Include the router in the main app (MUST be after all endpoints are defined)
+app.include_router(api_router)
+
+# Configure logging for production
+log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(
+    level=getattr(logging, log_level),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
