@@ -2471,14 +2471,16 @@ async def predict_student_success(
 
 @api_router.post("/emotion/analyze")
 async def analyze_emotional_state(
-    text_input: str,
-    context: Optional[Dict[str, Any]] = None,
+    request_data: Dict[str, Any],
     current_user: User = Depends(get_current_user)
 ):
     """Analyze emotional state from text input"""
     try:
-        if not text_input.strip():
-            raise HTTPException(status_code=400, detail="Text input cannot be empty")
+        text_input = request_data.get("text_input")
+        if not text_input or not text_input.strip():
+            raise HTTPException(status_code=400, detail="text_input is required and cannot be empty")
+        
+        context = request_data.get("context")
         
         result = emotion_engine.analyze_emotional_state(current_user.id, text_input, context)
         
