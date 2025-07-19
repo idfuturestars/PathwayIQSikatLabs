@@ -50,6 +50,9 @@ from learning_analytics import LearningAnalytics
 # Import reporting system
 from reporting_system import ReportingSystem
 
+# Import predictive analytics
+from predictive_analytics import PredictiveAnalytics
+
 # Import adaptive engine
 import sys
 import os
