@@ -832,6 +832,103 @@ class PredictiveEngine:
         """Analyze help-seeking behavior patterns"""
         return 0.3  # Simplified implementation
 
+    def _generate_baseline_predictions(self, user_id: str, prediction_horizon: int) -> Dict[str, Any]:
+        """Generate baseline predictions for new users with insufficient data"""
+        return {
+            "success": True,
+            "predictions": {
+                "user_id": user_id,
+                "prediction_horizon_days": prediction_horizon,
+                "predicted_performance": {
+                    "overall_score": 0.65,  # Average starting performance
+                    "skill_specific_scores": {
+                        "mathematics": 0.6,
+                        "reading": 0.65,
+                        "science": 0.6,
+                        "critical_thinking": 0.55
+                    },
+                    "confidence_interval": {"lower": 0.5, "upper": 0.8}
+                },
+                "engagement_prediction": {
+                    "activity_level": 0.7,
+                    "session_frequency": 3.0,
+                    "retention_probability": 0.75
+                },
+                "learning_trajectory": {
+                    "expected_level_progression": [
+                        {"day": 7, "predicted_level": 2, "confidence": 0.8},
+                        {"day": 14, "predicted_level": 3, "confidence": 0.75},
+                        {"day": 30, "predicted_level": 4, "confidence": 0.7}
+                    ],
+                    "skill_mastery_timeline": {
+                        "basic_concepts": "2024-02-01",
+                        "intermediate_skills": "2024-02-15",
+                        "advanced_topics": "2024-03-01"
+                    },
+                    "learning_velocity": 1.0
+                },
+                "recommendations": [
+                    {
+                        "type": "onboarding",
+                        "title": "Complete Initial Assessment",
+                        "description": "Take a few practice assessments to help us better understand your learning style",
+                        "priority": "high"
+                    },
+                    {
+                        "type": "engagement",
+                        "title": "Set Learning Goals",
+                        "description": "Define your learning objectives to get personalized recommendations",
+                        "priority": "medium"
+                    }
+                ],
+                "prediction_metadata": {
+                    "model_version": "baseline_1.0",
+                    "prediction_accuracy": 0.65,
+                    "generated_at": datetime.now(),
+                    "expires_at": datetime.now() + timedelta(days=7),
+                    "note": "Baseline predictions for new user - accuracy will improve with more data"
+                }
+            }
+        }
+
+    def _generate_baseline_risk_assessment(self, user_id: str) -> Dict[str, Any]:
+        """Generate baseline risk assessment for new users"""
+        return {
+            "success": True,
+            "risk_assessment": {
+                "user_id": user_id,
+                "overall_risk_level": RiskLevel.LOW,
+                "risk_score": 15.0,  # Low risk for new users
+                "risk_factors": [],
+                "protective_factors": ["new_user_enthusiasm", "growth_potential"],
+                "early_warning_indicators": {
+                    "performance_decline": False,
+                    "engagement_drop": False,
+                    "learning_pattern_disruption": False,
+                    "social_isolation": False
+                },
+                "intervention_recommendations": [
+                    {
+                        "type": "onboarding_support",
+                        "title": "Welcome Orientation",
+                        "description": "Complete the platform orientation to maximize learning success",
+                        "urgency": "low"
+                    }
+                ],
+                "support_resources": [
+                    "Getting Started Guide",
+                    "Learning Tips for Beginners",
+                    "Platform Tutorial"
+                ],
+                "monitoring_priorities": [
+                    "Track initial engagement patterns",
+                    "Monitor first assessment performance",
+                    "Observe learning consistency"
+                ],
+                "generated_at": datetime.now()
+            }
+        }
+
     def close_connection(self):
         """Close database connection"""
         if self.client:
