@@ -20,10 +20,12 @@ const ThinkAloudAssessment = () => {
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
-  // Initialize assessment
+  // Initialize assessment - wait for user to be loaded
   useEffect(() => {
-    initializeAssessment();
-  }, []);
+    if (user && !loading) {
+      initializeAssessment();
+    }
+  }, [user, loading]);
 
   const initializeAssessment = async () => {
     try {
