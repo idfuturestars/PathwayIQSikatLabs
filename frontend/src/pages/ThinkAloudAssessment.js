@@ -4,7 +4,7 @@ import SpeechToTextRecorder from '../components/SpeechToTextRecorder';
 import axios from 'axios';
 
 const ThinkAloudAssessment = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
