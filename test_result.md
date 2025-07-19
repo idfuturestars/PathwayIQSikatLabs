@@ -755,9 +755,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Speech-to-Text Frontend Implementation"
-  stuck_tasks:
-    - "Speech-to-Text Frontend Implementation"
+    - "Advanced Learning Analytics Dashboard Backend"
+    - "Comprehensive Reporting for Educators Backend"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
