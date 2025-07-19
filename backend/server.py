@@ -2634,6 +2634,277 @@ async def email_report(
         logger.error(f"Error emailing report: {e}")
         raise HTTPException(status_code=500, detail="Failed to email report")
 
+# ============================================================================
+# PREDICTIVE ANALYTICS - ML-BASED OUTCOME FORECASTING
+# ============================================================================
+
+class PredictionRequest(BaseModel):
+    subject: str = "mathematics"
+    questions_count: int = 10
+
+class LearningOutcomesRequest(BaseModel):
+    target_days: int = 30
+
+@api_router.post("/predictive/train-models")
+async def train_prediction_models(
+    current_user: User = Depends(get_current_user)
+):
+    """Train ML models for predictive analytics (admin only)"""
+    try:
+        # Check if user is admin
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        result = await predictive_analytics.train_models()
+        
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error training prediction models: {e}")
+        raise HTTPException(status_code=500, detail="Failed to train models")
+
+@api_router.post("/predictive/performance")
+async def predict_student_performance(
+    request: PredictionRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Predict student performance on upcoming assessment"""
+    try:
+        result = await predictive_analytics.predict_student_performance(
+            user_id=current_user.id,
+            subject=request.subject,
+            questions_count=request.questions_count
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "prediction": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error predicting performance: {e}")
+        raise HTTPException(status_code=500, detail="Failed to predict performance")
+
+@api_router.get("/predictive/risk-assessment")
+async def assess_student_risk(
+    current_user: User = Depends(get_current_user)
+):
+    """Assess if current student is at risk of poor performance"""
+    try:
+        result = await predictive_analytics.assess_student_risk(
+            user_id=current_user.id
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "assessment": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error assessing student risk: {e}")
+        raise HTTPException(status_code=500, detail="Failed to assess risk")
+
+@api_router.post("/predictive/learning-outcomes")
+async def predict_learning_outcomes(
+    request: LearningOutcomesRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Predict learning outcomes over specified time period"""
+    try:
+        result = await predictive_analytics.predict_learning_outcomes(
+            user_id=current_user.id,
+            target_days=request.target_days
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "predictions": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error predicting learning outcomes: {e}")
+        raise HTTPException(status_code=500, detail="Failed to predict outcomes")
+
+@api_router.get("/predictive/risk-assessment/student/{student_id}")
+async def assess_specific_student_risk(
+    student_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Assess specific student's risk (educators only)"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        result = await predictive_analytics.assess_student_risk(
+            user_id=student_id
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "assessment": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error assessing specific student risk: {e}")
+        raise HTTPException(status_code=500, detail="Failed to assess student risk")
+
+@api_router.post("/predictive/performance/student/{student_id}")
+async def predict_specific_student_performance(
+    student_id: str,
+    request: PredictionRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Predict specific student's performance (educators only)"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        result = await predictive_analytics.predict_student_performance(
+            user_id=student_id,
+            subject=request.subject,
+            questions_count=request.questions_count
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "prediction": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error predicting specific student performance: {e}")
+        raise HTTPException(status_code=500, detail="Failed to predict performance")
+
+@api_router.get("/predictive/class-insights")
+async def get_class_predictive_insights(
+    current_user: User = Depends(get_current_user)
+):
+    """Get predictive insights for entire class (educators only)"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        # Get all students (in a real system, filter by educator's classes)
+        students = list(db.users.find({"role": "student"}))
+        
+        class_insights = {
+            "total_students": len(students),
+            "risk_analysis": {"high": 0, "medium": 0, "low": 0, "unknown": 0},
+            "performance_predictions": [],
+            "recommendations": []
+        }
+        
+        # Analyze each student
+        for student in students[:20]:  # Limit to 20 students for performance
+            try:
+                risk_result = await predictive_analytics.assess_student_risk(student["id"])
+                
+                if "error" not in risk_result:
+                    risk_level = risk_result.get("risk_level", "unknown")
+                    class_insights["risk_analysis"][risk_level] += 1
+                    
+                    if risk_level in ["high", "medium"]:
+                        class_insights["recommendations"].extend(
+                            risk_result.get("recommendations", [])[:2]
+                        )
+                
+            except Exception as e:
+                logger.warning(f"Error analyzing student {student['id']}: {e}")
+                class_insights["risk_analysis"]["unknown"] += 1
+        
+        # Generate class-level recommendations
+        high_risk_count = class_insights["risk_analysis"]["high"]
+        medium_risk_count = class_insights["risk_analysis"]["medium"]
+        
+        if high_risk_count > len(students) * 0.2:  # >20% high risk
+            class_insights["recommendations"].insert(0, 
+                "Consider class-wide intervention - high number of at-risk students")
+        
+        if medium_risk_count > len(students) * 0.3:  # >30% medium risk
+            class_insights["recommendations"].insert(0, 
+                "Increase monitoring and support for struggling students")
+        
+        # Remove duplicates
+        class_insights["recommendations"] = list(set(class_insights["recommendations"]))[:5]
+        
+        return {
+            "success": True,
+            "insights": class_insights
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting class predictive insights: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get class insights")
+
+@api_router.get("/predictive/model-status")
+async def get_model_status(
+    current_user: User = Depends(get_current_user)
+):
+    """Get status of ML models (educators and admins only)"""
+    try:
+        # Check if user is an educator or admin
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        model_status = {}
+        
+        for model_name in predictive_analytics.model_configs:
+            model = await predictive_analytics._load_model(model_name)
+            model_status[model_name] = {
+                "available": model is not None,
+                "type": predictive_analytics.model_configs[model_name]["model_type"],
+                "algorithm": predictive_analytics.model_configs[model_name]["algorithm"]
+            }
+        
+        return {
+            "success": True,
+            "models": model_status,
+            "total_models": len(model_status),
+            "available_models": sum(1 for status in model_status.values() if status["available"])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting model status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get model status")
+
 # Include the router in the main app
 app.include_router(api_router)
 
