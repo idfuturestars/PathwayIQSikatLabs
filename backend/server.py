@@ -1822,6 +1822,291 @@ async def submit_answer(
         "explanation": question["explanation"]
     }
 
+# ============================================================================
+# STUDY GROUPS & COLLABORATIVE LEARNING ENDPOINTS
+# ============================================================================
+
+class StudyGroupCreate(BaseModel):
+    name: str
+    description: str
+    subject: str
+    max_members: int = 10
+    is_public: bool = True
+    topics: List[str] = []
+
+class StudyGroupMessage(BaseModel):
+    content: str
+    message_type: str = "text"
+    metadata: Dict[str, Any] = {}
+
+class StudySessionCreate(BaseModel):
+    topic: str
+    description: str = ""
+    duration_minutes: int = 60
+
+@api_router.post("/study-groups/create")
+async def create_study_group(
+    group_data: StudyGroupCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Create a new study group"""
+    try:
+        result = await study_groups_engine.create_study_group(
+            creator_id=current_user.id,
+            name=group_data.name,
+            description=group_data.description,
+            subject=group_data.subject,
+            max_members=group_data.max_members,
+            is_public=group_data.is_public,
+            topics=group_data.topics
+        )
+        
+        if result["success"]:
+            # Track achievement for group creation
+            gamification = get_gamification_engine(db)
+            await gamification.track_achievement(
+                current_user.id, 
+                "group_creator", 
+                metadata={"group_id": result["group_id"]}
+            )
+            
+            return {
+                "success": True,
+                "message": "Study group created successfully",
+                "data": result
+            }
+        else:
+            return {"success": False, "error": result["error"]}
+        
+    except Exception as e:
+        logger.error(f"Error creating study group: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create study group")
+
+@api_router.post("/study-groups/{group_id}/join")
+async def join_study_group(
+    group_id: str,
+    join_message: str = "",
+    current_user: User = Depends(get_current_user)
+):
+    """Join a study group"""
+    try:
+        result = await study_groups_engine.join_study_group(
+            user_id=current_user.id,
+            group_id=group_id,
+            join_message=join_message
+        )
+        
+        if result["success"]:
+            # Track achievement for joining groups
+            gamification = get_gamification_engine(db)
+            await gamification.track_achievement(
+                current_user.id, 
+                "team_player", 
+                metadata={"group_id": group_id}
+            )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error joining study group: {e}")
+        raise HTTPException(status_code=500, detail="Failed to join study group")
+
+@api_router.post("/study-groups/{group_id}/leave")
+async def leave_study_group(
+    group_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Leave a study group"""
+    try:
+        result = await study_groups_engine.leave_study_group(
+            user_id=current_user.id,
+            group_id=group_id
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error leaving study group: {e}")
+        raise HTTPException(status_code=500, detail="Failed to leave study group")
+
+@api_router.get("/study-groups/my-groups")
+async def get_my_study_groups(current_user: User = Depends(get_current_user)):
+    """Get user's study groups"""
+    try:
+        groups = await study_groups_engine.get_user_groups(current_user.id)
+        
+        return {
+            "success": True,
+            "groups": groups,
+            "total": len(groups)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting user groups: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get study groups")
+
+@api_router.get("/study-groups/public")
+async def get_public_study_groups(
+    subject: Optional[str] = None,
+    limit: int = 20,
+    skip: int = 0
+):
+    """Get public study groups"""
+    try:
+        groups = await study_groups_engine.get_public_groups(
+            subject=subject,
+            limit=limit,
+            skip=skip
+        )
+        
+        return {
+            "success": True,
+            "groups": groups,
+            "total": len(groups)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting public groups: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get public groups")
+
+@api_router.post("/study-groups/{group_id}/messages")
+async def send_group_message(
+    group_id: str,
+    message_data: StudyGroupMessage,
+    current_user: User = Depends(get_current_user)
+):
+    """Send a message to a study group"""
+    try:
+        result = await study_groups_engine.send_message(
+            group_id=group_id,
+            user_id=current_user.id,
+            content=message_data.content,
+            message_type=message_data.message_type,
+            metadata=message_data.metadata
+        )
+        
+        if result["success"]:
+            # Track collaborative participation
+            gamification = get_gamification_engine(db)
+            await gamification.track_achievement(
+                current_user.id, 
+                "active_participant", 
+                metadata={"group_id": group_id}
+            )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error sending group message: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send message")
+
+@api_router.get("/study-groups/{group_id}/messages")
+async def get_group_messages(
+    group_id: str,
+    limit: int = 50,
+    before_timestamp: Optional[datetime] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get messages from a study group"""
+    try:
+        messages = await study_groups_engine.get_group_messages(
+            group_id=group_id,
+            user_id=current_user.id,
+            limit=limit,
+            before_timestamp=before_timestamp
+        )
+        
+        return {
+            "success": True,
+            "messages": messages,
+            "total": len(messages)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting group messages: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get messages")
+
+@api_router.post("/study-groups/{group_id}/sessions/start")
+async def start_study_session(
+    group_id: str,
+    session_data: StudySessionCreate,
+    current_user: User = Depends(get_current_user)
+):
+    """Start a collaborative study session"""
+    try:
+        result = await study_groups_engine.start_study_session(
+            group_id=group_id,
+            creator_id=current_user.id,
+            topic=session_data.topic,
+            description=session_data.description,
+            duration_minutes=session_data.duration_minutes
+        )
+        
+        if result["success"]:
+            # Track session leadership
+            gamification = get_gamification_engine(db)
+            await gamification.track_achievement(
+                current_user.id, 
+                "session_leader", 
+                metadata={"session_id": result["session_id"]}
+            )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error starting study session: {e}")
+        raise HTTPException(status_code=500, detail="Failed to start study session")
+
+@api_router.post("/study-groups/sessions/{session_id}/join")
+async def join_study_session(
+    session_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Join an active study session"""
+    try:
+        result = await study_groups_engine.join_study_session(
+            session_id=session_id,
+            user_id=current_user.id
+        )
+        
+        if result["success"]:
+            # Track session participation
+            gamification = get_gamification_engine(db)
+            await gamification.track_achievement(
+                current_user.id, 
+                "dedicated_learner", 
+                metadata={"session_id": session_id}
+            )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error joining study session: {e}")
+        raise HTTPException(status_code=500, detail="Failed to join study session")
+
+@api_router.get("/study-groups/{group_id}/analytics")
+async def get_group_analytics(
+    group_id: str,
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Get analytics for a study group"""
+    try:
+        analytics = await study_groups_engine.get_group_analytics(
+            group_id=group_id,
+            user_id=current_user.id,
+            days=days
+        )
+        
+        return {
+            "success": True,
+            "analytics": analytics
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting group analytics: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get analytics")
+
 # Include the router in the main app
 app.include_router(api_router)
 
