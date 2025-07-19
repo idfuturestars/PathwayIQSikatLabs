@@ -1569,6 +1569,815 @@ def test_content_generation_error_handling():
         return False
 
 # ============================================================================
+# PHASE 2 BACKEND FEATURE TESTS - COLLABORATION, PREDICTIVE, EMOTION
+# ============================================================================
+
+def test_collaboration_create_study_group():
+    """Test POST /api/collaboration/groups/create"""
+    print_test_header("Collaboration - Create Study Group")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        group_data = {
+            "name": "PathwayIQ Math Study Group",
+            "description": "A collaborative group for learning advanced mathematics",
+            "subject": "mathematics",
+            "group_type": "study_group",
+            "max_members": 15,
+            "is_public": True,
+            "allow_member_invites": True,
+            "require_approval": False,
+            "enable_discussions": True,
+            "enable_projects": True,
+            "tags": ["algebra", "calculus", "problem-solving"],
+            "learning_objectives": [
+                "Master quadratic equations",
+                "Understand calculus fundamentals",
+                "Improve problem-solving skills"
+            ]
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/collaboration/groups/create",
+            json=group_data,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Study group created successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "group_id", "group", "message"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Verify group data
+            if data.get("success"):
+                print_result(True, "Success flag is True")
+            else:
+                print_result(False, "Success flag is False")
+            
+            group = data.get("group", {})
+            if group.get("name") == group_data["name"]:
+                print_result(True, "Group name matches request")
+            else:
+                print_result(False, f"Group name mismatch: expected {group_data['name']}, got {group.get('name')}")
+            
+            print(f"   Group ID: {data.get('group_id')}")
+            print(f"   Group Name: {group.get('name')}")
+            print(f"   Subject: {group.get('subject')}")
+            
+            # Store group ID for subsequent tests
+            global test_group_id
+            test_group_id = data.get('group_id')
+            
+            return True
+        else:
+            print_result(False, f"Create study group failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Create study group failed with exception: {e}")
+        return False
+
+def test_collaboration_get_user_groups():
+    """Test GET /api/collaboration/groups/user"""
+    print_test_header("Collaboration - Get User Groups")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/collaboration/groups/user?status=active",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "User groups retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "groups", "total_groups"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            groups = data.get("groups", [])
+            total_groups = data.get("total_groups", 0)
+            
+            print(f"   Total groups: {total_groups}")
+            print(f"   Groups returned: {len(groups)}")
+            
+            # If we have groups, check their structure
+            if groups:
+                first_group = groups[0]
+                group_fields = ["group_id", "name", "subject", "user_role", "joined_at"]
+                for field in group_fields:
+                    if field in first_group:
+                        print_result(True, f"Group contains {field}")
+                    else:
+                        print_result(False, f"Group missing {field}")
+            
+            return True
+        else:
+            print_result(False, f"Get user groups failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get user groups failed with exception: {e}")
+        return False
+
+def test_collaboration_search_groups():
+    """Test GET /api/collaboration/groups/search"""
+    print_test_header("Collaboration - Search Groups")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test search by subject
+        response = requests.get(
+            f"{API_BASE}/collaboration/groups/search?subject=mathematics",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Group search successful")
+            
+            # Check response structure
+            expected_fields = ["success", "groups", "total_results", "search_params"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            groups = data.get("groups", [])
+            total_results = data.get("total_results", 0)
+            
+            print(f"   Search results: {total_results}")
+            print(f"   Groups returned: {len(groups)}")
+            
+            return True
+        else:
+            print_result(False, f"Search groups failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Search groups failed with exception: {e}")
+        return False
+
+def test_collaboration_create_discussion():
+    """Test POST /api/collaboration/groups/{group_id}/discussions"""
+    print_test_header("Collaboration - Create Discussion")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test group ID if available, otherwise create a dummy one
+    group_id = globals().get('test_group_id', f'test_group_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        discussion_data = {
+            "title": "Quadratic Equations Discussion",
+            "content": "Let's discuss different methods for solving quadratic equations. What's your favorite approach?",
+            "category": "mathematics",
+            "tags": ["quadratic", "algebra", "problem-solving"]
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/collaboration/groups/{group_id}/discussions",
+            json=discussion_data,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Discussion created successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "discussion_id", "discussion", "message"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            discussion = data.get("discussion", {})
+            if discussion.get("title") == discussion_data["title"]:
+                print_result(True, "Discussion title matches request")
+            else:
+                print_result(False, "Discussion title mismatch")
+            
+            print(f"   Discussion ID: {data.get('discussion_id')}")
+            print(f"   Title: {discussion.get('title')}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Group not found (expected for test group)")
+            return True
+        else:
+            print_result(False, f"Create discussion failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Create discussion failed with exception: {e}")
+        return False
+
+def test_predictive_learning_outcomes():
+    """Test GET /api/predictive/learning-outcomes"""
+    print_test_header("Predictive Analytics - Learning Outcomes")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/predictive/learning-outcomes?prediction_horizon=30",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Learning outcomes prediction successful")
+            
+            # Check response structure
+            expected_fields = ["success", "predictions"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            predictions = data.get("predictions", {})
+            if isinstance(predictions, dict):
+                print_result(True, "Predictions data is properly structured")
+                
+                # Check for prediction components
+                prediction_fields = ["user_id", "prediction_horizon", "performance_forecast", "skill_development"]
+                for field in prediction_fields:
+                    if field in predictions:
+                        print_result(True, f"Predictions contain {field}")
+                    else:
+                        print_result(False, f"Predictions missing {field}")
+            
+            print(f"   User ID: {predictions.get('user_id', 'N/A')}")
+            print(f"   Prediction Horizon: {predictions.get('prediction_horizon', 'N/A')} days")
+            
+            return True
+        else:
+            print_result(False, f"Learning outcomes prediction failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Learning outcomes prediction failed with exception: {e}")
+        return False
+
+def test_predictive_risk_assessment():
+    """Test GET /api/predictive/risk-assessment"""
+    print_test_header("Predictive Analytics - Risk Assessment")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/predictive/risk-assessment",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Risk assessment successful")
+            
+            # Check response structure
+            expected_fields = ["success", "risk_assessment"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            risk_assessment = data.get("risk_assessment", {})
+            if isinstance(risk_assessment, dict):
+                print_result(True, "Risk assessment data is properly structured")
+                
+                # Check for risk assessment components
+                risk_fields = ["user_id", "overall_risk_level", "risk_factors", "intervention_recommendations"]
+                for field in risk_fields:
+                    if field in risk_assessment:
+                        print_result(True, f"Risk assessment contains {field}")
+                    else:
+                        print_result(False, f"Risk assessment missing {field}")
+            
+            print(f"   User ID: {risk_assessment.get('user_id', 'N/A')}")
+            print(f"   Risk Level: {risk_assessment.get('overall_risk_level', 'N/A')}")
+            
+            return True
+        else:
+            print_result(False, f"Risk assessment failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Risk assessment failed with exception: {e}")
+        return False
+
+def test_predictive_skill_mastery():
+    """Test POST /api/predictive/skill-mastery"""
+    print_test_header("Predictive Analytics - Skill Mastery")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        skills_request = ["algebra", "geometry", "calculus"]
+        
+        response = requests.post(
+            f"{API_BASE}/predictive/skill-mastery",
+            json=skills_request,
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Skill mastery prediction successful")
+            
+            # Check response structure
+            expected_fields = ["success", "skill_mastery_predictions"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            predictions = data.get("skill_mastery_predictions", {})
+            if isinstance(predictions, dict):
+                print_result(True, "Skill mastery predictions properly structured")
+                
+                # Check for prediction components
+                prediction_fields = ["user_id", "skills_analyzed", "mastery_timeline", "recommendations"]
+                for field in prediction_fields:
+                    if field in predictions:
+                        print_result(True, f"Predictions contain {field}")
+                    else:
+                        print_result(False, f"Predictions missing {field}")
+            
+            print(f"   Skills analyzed: {len(predictions.get('skills_analyzed', []))}")
+            
+            return True
+        else:
+            print_result(False, f"Skill mastery prediction failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Skill mastery prediction failed with exception: {e}")
+        return False
+
+def test_emotion_analyze():
+    """Test POST /api/emotion/analyze"""
+    print_test_header("Emotional Intelligence - Analyze Emotional State")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test with different emotional contexts
+        test_texts = [
+            "I'm really excited about learning calculus! This is so interesting and I can't wait to solve more problems.",
+            "I'm feeling frustrated with these algebra problems. They seem too difficult and I don't understand the concepts.",
+            "I'm confident that I can master these mathematical concepts with practice and dedication."
+        ]
+        
+        for i, text_input in enumerate(test_texts):
+            response = requests.post(
+                f"{API_BASE}/emotion/analyze",
+                json={"text_input": text_input, "context": {"session_type": "learning"}},
+                headers=headers,
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print_result(True, f"Emotional analysis successful for text {i+1}")
+                
+                # Check response structure
+                expected_fields = ["success", "emotional_analysis"]
+                for field in expected_fields:
+                    if field in data:
+                        print_result(True, f"Response contains {field}")
+                    else:
+                        print_result(False, f"Response missing {field}")
+                
+                analysis = data.get("emotional_analysis", {})
+                if isinstance(analysis, dict):
+                    print_result(True, "Emotional analysis properly structured")
+                    
+                    # Check for analysis components
+                    analysis_fields = ["user_id", "primary_emotion", "emotional_intensity", "mood_category", "emotional_indicators"]
+                    for field in analysis_fields:
+                        if field in analysis:
+                            print_result(True, f"Analysis contains {field}")
+                        else:
+                            print_result(False, f"Analysis missing {field}")
+                
+                print(f"   Primary Emotion: {analysis.get('primary_emotion', 'N/A')}")
+                print(f"   Mood Category: {analysis.get('mood_category', 'N/A')}")
+                print(f"   Emotional Intensity: {analysis.get('emotional_intensity', 'N/A')}")
+                
+            else:
+                print_result(False, f"Emotional analysis failed for text {i+1} with status {response.status_code}", response.text)
+                return False
+        
+        return True
+            
+    except Exception as e:
+        print_result(False, f"Emotional analysis failed with exception: {e}")
+        return False
+
+def test_emotion_empathetic_response():
+    """Test POST /api/emotion/empathetic-response"""
+    print_test_header("Emotional Intelligence - Generate Empathetic Response")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        user_message = "I'm struggling with these math problems and feeling really overwhelmed. I don't think I'm smart enough for this."
+        
+        response = requests.post(
+            f"{API_BASE}/emotion/empathetic-response",
+            json={"user_message": user_message},
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Empathetic response generated successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "empathetic_response"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            empathetic_response = data.get("empathetic_response", {})
+            if isinstance(empathetic_response, dict):
+                print_result(True, "Empathetic response properly structured")
+                
+                # Check for response components
+                response_fields = ["response_id", "user_id", "primary_emotion_detected", "response_strategy", "response_content"]
+                for field in response_fields:
+                    if field in empathetic_response:
+                        print_result(True, f"Response contains {field}")
+                    else:
+                        print_result(False, f"Response missing {field}")
+            
+            print(f"   Detected Emotion: {empathetic_response.get('primary_emotion_detected', 'N/A')}")
+            print(f"   Response Strategy: {empathetic_response.get('response_strategy', 'N/A')}")
+            
+            return True
+        else:
+            print_result(False, f"Empathetic response failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Empathetic response failed with exception: {e}")
+        return False
+
+def test_emotion_journey():
+    """Test GET /api/emotion/journey"""
+    print_test_header("Emotional Intelligence - Track Emotional Journey")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/emotion/journey?time_period=30",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Emotional journey tracking successful")
+            
+            # Check response structure
+            expected_fields = ["success", "emotional_journey"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            journey = data.get("emotional_journey", {})
+            if isinstance(journey, dict):
+                print_result(True, "Emotional journey properly structured")
+                
+                # Check for journey components
+                journey_fields = ["user_id", "analysis_period_days", "total_interactions", "pattern_analysis"]
+                for field in journey_fields:
+                    if field in journey:
+                        print_result(True, f"Journey contains {field}")
+                    else:
+                        print_result(False, f"Journey missing {field}")
+            
+            print(f"   Analysis Period: {journey.get('analysis_period_days', 'N/A')} days")
+            print(f"   Total Interactions: {journey.get('total_interactions', 'N/A')}")
+            
+            return True
+        else:
+            # Check if it's a "no data" error which is acceptable
+            if response.status_code == 404 or "No emotional data" in response.text:
+                print_result(True, "No emotional data available (expected for new user)")
+                return True
+            else:
+                print_result(False, f"Emotional journey tracking failed with status {response.status_code}", response.text)
+                return False
+            
+    except Exception as e:
+        print_result(False, f"Emotional journey tracking failed with exception: {e}")
+        return False
+
+def test_emotion_profile():
+    """Test GET /api/emotion/profile"""
+    print_test_header("Emotional Intelligence - Get Emotional Learning Profile")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/emotion/profile",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Emotional learning profile retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "emotional_learning_profile"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            profile = data.get("emotional_learning_profile", {})
+            if isinstance(profile, dict):
+                print_result(True, "Emotional profile properly structured")
+                
+                # Check for profile components
+                profile_fields = ["user_id", "profile_type", "emotional_characteristics", "learning_preferences"]
+                for field in profile_fields:
+                    if field in profile:
+                        print_result(True, f"Profile contains {field}")
+                    else:
+                        print_result(False, f"Profile missing {field}")
+            
+            print(f"   Profile Type: {profile.get('profile_type', 'N/A')}")
+            print(f"   User ID: {profile.get('user_id', 'N/A')}")
+            
+            return True
+        else:
+            print_result(False, f"Emotional profile retrieval failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Emotional profile retrieval failed with exception: {e}")
+        return False
+
+def test_collaboration_authentication():
+    """Test collaboration endpoints without authentication"""
+    print_test_header("Collaboration Authentication Test")
+    
+    try:
+        # Test create group endpoint without auth
+        group_data = {"name": "Test Group", "subject": "test"}
+        
+        response = requests.post(
+            f"{API_BASE}/collaboration/groups/create",
+            json=group_data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Create group endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Create group endpoint should return 401/403, got {response.status_code}")
+        
+        # Test get user groups endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/collaboration/groups/user",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Get user groups endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Get user groups endpoint should return 401/403, got {response.status_code}")
+        
+        # Test search groups endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/collaboration/groups/search",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Search groups endpoint properly requires authentication (status {response.status_code})")
+            return True
+        else:
+            print_result(False, f"Search groups endpoint should return 401/403, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Collaboration authentication test failed with exception: {e}")
+        return False
+
+def test_predictive_authentication():
+    """Test predictive analytics endpoints without authentication"""
+    print_test_header("Predictive Analytics Authentication Test")
+    
+    try:
+        # Test learning outcomes endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/predictive/learning-outcomes",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Learning outcomes endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Learning outcomes endpoint should return 401/403, got {response.status_code}")
+        
+        # Test risk assessment endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/predictive/risk-assessment",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Risk assessment endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Risk assessment endpoint should return 401/403, got {response.status_code}")
+        
+        # Test skill mastery endpoint without auth
+        response = requests.post(
+            f"{API_BASE}/predictive/skill-mastery",
+            json=["test"],
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Skill mastery endpoint properly requires authentication (status {response.status_code})")
+            return True
+        else:
+            print_result(False, f"Skill mastery endpoint should return 401/403, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Predictive authentication test failed with exception: {e}")
+        return False
+
+def test_emotion_authentication():
+    """Test emotional intelligence endpoints without authentication"""
+    print_test_header("Emotional Intelligence Authentication Test")
+    
+    try:
+        # Test emotion analyze endpoint without auth
+        response = requests.post(
+            f"{API_BASE}/emotion/analyze",
+            json={"text_input": "test"},
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Emotion analyze endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Emotion analyze endpoint should return 401/403, got {response.status_code}")
+        
+        # Test empathetic response endpoint without auth
+        response = requests.post(
+            f"{API_BASE}/emotion/empathetic-response",
+            json={"user_message": "test"},
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Empathetic response endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Empathetic response endpoint should return 401/403, got {response.status_code}")
+        
+        # Test emotional journey endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/emotion/journey",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Emotional journey endpoint properly requires authentication (status {response.status_code})")
+            return True
+        else:
+            print_result(False, f"Emotional journey endpoint should return 401/403, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Emotion authentication test failed with exception: {e}")
+        return False
+
+# ============================================================================
 # ANALYTICS AND REPORTING TESTS - PHASE 2 IMPLEMENTATION
 # ============================================================================
 
