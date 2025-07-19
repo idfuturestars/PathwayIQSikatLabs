@@ -2911,6 +2911,260 @@ async def get_model_status(
         logger.error(f"Error getting model status: {e}")
         raise HTTPException(status_code=500, detail="Failed to get model status")
 
+# ============================================================================
+# ENHANCED EMOTIONAL INTELLIGENCE ANALYSIS
+# ============================================================================
+
+class EmotionalAnalysisRequest(BaseModel):
+    text_input: str
+    context: str = "general"
+    source: str = "assessment"
+
+class EmotionalProfileRequest(BaseModel):
+    days: int = 30
+
+@api_router.post("/emotional-intelligence/analyze")
+async def analyze_emotional_state(
+    request: EmotionalAnalysisRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Analyze emotional state from text input"""
+    try:
+        result = await emotional_intelligence.analyze_emotional_state(
+            user_id=current_user.id,
+            text_input=request.text_input,
+            context=request.context,
+            source=request.source
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing emotional state: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze emotional state")
+
+@api_router.get("/emotional-intelligence/profile")
+async def get_emotional_profile(
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive emotional profile for current user"""
+    try:
+        result = await emotional_intelligence.get_user_emotional_profile(
+            user_id=current_user.id,
+            days=days
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting emotional profile: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get emotional profile")
+
+@api_router.get("/emotional-intelligence/profile/student/{student_id}")
+async def get_student_emotional_profile(
+    student_id: str,
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Get emotional profile for specific student (educators only)"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        result = await emotional_intelligence.get_user_emotional_profile(
+            user_id=student_id,
+            days=days
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return {
+            "success": True,
+            "student_id": student_id,
+            "profile": result
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting student emotional profile: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get student profile")
+
+@api_router.get("/emotional-intelligence/insights")
+async def get_emotional_insights(
+    current_user: User = Depends(get_current_user)
+):
+    """Get quick emotional intelligence insights for current user"""
+    try:
+        # Get recent emotional profile
+        profile_result = await emotional_intelligence.get_user_emotional_profile(
+            user_id=current_user.id,
+            days=7  # Last week
+        )
+        
+        if "error" in profile_result:
+            return {
+                "success": True,
+                "insights": {
+                    "message": "No recent emotional data available",
+                    "recommendations": ["Take assessments to build emotional profile"]
+                }
+            }
+        
+        profile = profile_result["profile"]
+        
+        # Extract key insights
+        insights = {
+            "emotional_stability": profile.get("emotional_stability", 0.5),
+            "dominant_emotions": profile.get("dominant_emotions", {}),
+            "preferred_learning_style": profile.get("preferred_learning_style", "balanced"),
+            "stress_frequency": profile.get("stress_patterns", {}).get("stress_frequency", 0),
+            "ei_level": profile.get("emotional_intelligence", {}).get("level", "developing"),
+            "quick_recommendations": [
+                rec.get("title", "Continue learning")
+                for rec in profile.get("recommendations", [])[:3]
+            ]
+        }
+        
+        return {
+            "success": True,
+            "insights": insights
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting emotional insights: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get emotional insights")
+
+@api_router.post("/emotional-intelligence/analyze-speech")
+async def analyze_speech_emotional_state(
+    text_input: str,
+    session_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Analyze emotional state from speech-to-text session"""
+    try:
+        result = await emotional_intelligence.analyze_emotional_state(
+            user_id=current_user.id,
+            text_input=text_input,
+            context="think_aloud_assessment",
+            source="speech_session"
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        # Also update the speech session with emotional analysis
+        if result.get("success"):
+            emotional_analysis = result["emotional_analysis"]
+            
+            # Update speech session with emotional data
+            try:
+                db.speech_sessions.update_one(
+                    {"session_id": session_id, "user_id": current_user.id},
+                    {
+                        "$set": {
+                            "emotional_analysis": {
+                                "dominant_emotion": emotional_analysis.get("dominant_emotion"),
+                                "sentiment_polarity": emotional_analysis.get("sentiment", {}).get("polarity", 0),
+                                "cognitive_load": emotional_analysis.get("cognitive_load", {}).get("level"),
+                                "ai_insights": emotional_analysis.get("ai_insights", {}),
+                                "analyzed_at": datetime.utcnow()
+                            }
+                        }
+                    }
+                )
+            except Exception as update_error:
+                logger.warning(f"Failed to update speech session with emotional data: {update_error}")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing speech emotional state: {e}")
+        raise HTTPException(status_code=500, detail="Failed to analyze speech emotions")
+
+@api_router.get("/emotional-intelligence/learning-recommendations")
+async def get_personalized_learning_recommendations(
+    current_user: User = Depends(get_current_user)
+):
+    """Get personalized learning recommendations based on emotional profile"""
+    try:
+        # Get user's recent emotional profile
+        profile_result = await emotional_intelligence.get_user_emotional_profile(
+            user_id=current_user.id,
+            days=14
+        )
+        
+        if "error" in profile_result:
+            return {
+                "success": True,
+                "recommendations": {
+                    "message": "Take more assessments to get personalized recommendations",
+                    "general_tips": [
+                        "Maintain consistent study schedule",
+                        "Take breaks to avoid fatigue",
+                        "Practice positive self-talk"
+                    ]
+                }
+            }
+        
+        profile = profile_result["profile"]
+        recommendations = profile.get("recommendations", [])
+        
+        # Enhance recommendations with actionable steps
+        enhanced_recommendations = []
+        for rec in recommendations:
+            enhanced_rec = {
+                "category": rec.get("category", "general"),
+                "priority": rec.get("priority", "medium"),
+                "title": rec.get("title", "Learning Improvement"),
+                "description": rec.get("description", "Recommendation for better learning"),
+                "action_steps": rec.get("suggestions", []),
+                "expected_outcome": _generate_outcome_description(rec.get("category"))
+            }
+            enhanced_recommendations.append(enhanced_rec)
+        
+        return {
+            "success": True,
+            "recommendations": {
+                "personalized_recommendations": enhanced_recommendations,
+                "emotional_summary": {
+                    "stability": profile.get("emotional_stability", 0.5),
+                    "dominant_emotions": profile.get("dominant_emotions", {}),
+                    "learning_style": profile.get("preferred_learning_style", "balanced")
+                }
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting learning recommendations: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get recommendations")
+
+def _generate_outcome_description(category: str) -> str:
+    """Generate expected outcome description for recommendation category"""
+    outcomes = {
+        "stress_management": "Reduced anxiety and improved focus during learning",
+        "learning_optimization": "Better retention and understanding of material",
+        "emotional_regulation": "More consistent and positive learning experiences",
+        "performance_optimization": "Higher assessment scores and improved confidence"
+    }
+    
+    return outcomes.get(category, "Enhanced learning experience and academic performance")
+
 # Include the router in the main app
 app.include_router(api_router)
 
