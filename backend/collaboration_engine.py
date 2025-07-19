@@ -277,7 +277,7 @@ class CollaborationEngine:
             
             members = []
             for membership in memberships:
-                user = self.users_collection.find_one({"user_id": membership["user_id"]})
+                user = self.users_collection.find_one({"id": membership["user_id"]})
                 if user:
                     members.append({
                         "user_id": membership["user_id"],
