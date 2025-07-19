@@ -30,8 +30,10 @@ class AnalyticsEngine:
         if not mongo_url:
             raise ValueError("MONGO_URL environment variable is required")
         
+        db_name = os.environ.get('DB_NAME', 'idfs_pathwayiq_database')
+        
         self.client = MongoClient(mongo_url)
-        self.db = self.client.get_database()
+        self.db = self.client[db_name]
         
         # Collections for analytics data
         self.users_collection = self.db.users
