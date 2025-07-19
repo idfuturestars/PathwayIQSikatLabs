@@ -28,6 +28,11 @@ const ThinkAloudAssessment = () => {
   }, [user, loading]);
 
   const initializeAssessment = async () => {
+    // Don't initialize if user not loaded or still loading
+    if (!user || loading) {
+      return;
+    }
+    
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
