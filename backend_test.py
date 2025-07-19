@@ -3084,6 +3084,39 @@ def run_all_tests():
     test_results['reports_educator'] = test_reports_educator()
     test_results['reports_delete'] = test_reports_delete()
     
+    # PHASE 2: COLLABORATION, PREDICTIVE, AND EMOTIONAL INTELLIGENCE TESTS
+    print(f"\n{'='*60}")
+    print("🤝 PHASE 2: COLLABORATION & SOCIAL LEARNING FUNCTIONALITY TESTING")
+    print(f"{'='*60}")
+    
+    # Collaboration endpoints
+    test_results['collaboration_auth'] = test_collaboration_authentication()
+    test_results['collaboration_create_group'] = test_collaboration_create_study_group()
+    test_results['collaboration_user_groups'] = test_collaboration_get_user_groups()
+    test_results['collaboration_search'] = test_collaboration_search_groups()
+    test_results['collaboration_discussion'] = test_collaboration_create_discussion()
+    
+    print(f"\n{'='*60}")
+    print("🔮 PHASE 2: PREDICTIVE ANALYTICS FUNCTIONALITY TESTING")
+    print(f"{'='*60}")
+    
+    # Predictive analytics endpoints
+    test_results['predictive_auth'] = test_predictive_authentication()
+    test_results['predictive_outcomes'] = test_predictive_learning_outcomes()
+    test_results['predictive_risk'] = test_predictive_risk_assessment()
+    test_results['predictive_skills'] = test_predictive_skill_mastery()
+    
+    print(f"\n{'='*60}")
+    print("🧠 PHASE 2: EMOTIONAL INTELLIGENCE FUNCTIONALITY TESTING")
+    print(f"{'='*60}")
+    
+    # Emotional intelligence endpoints
+    test_results['emotion_auth'] = test_emotion_authentication()
+    test_results['emotion_analyze'] = test_emotion_analyze()
+    test_results['emotion_empathetic'] = test_emotion_empathetic_response()
+    test_results['emotion_journey'] = test_emotion_journey()
+    test_results['emotion_profile'] = test_emotion_profile()
+    
     # AI Content Generation tests (main focus of this testing session)
     print(f"\n{'='*60}")
     print("🤖 AI CONTENT GENERATION FUNCTIONALITY TESTING")
