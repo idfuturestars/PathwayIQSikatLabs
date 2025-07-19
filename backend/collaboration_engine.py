@@ -151,7 +151,7 @@ class CollaborationEngine:
         """Join a study group"""
         try:
             # Validate user and group exist
-            user = self.users_collection.find_one({"user_id": user_id})
+            user = self.users_collection.find_one({"id": user_id})
             group = self.groups_collection.find_one({"group_id": group_id})
             
             if not user:
