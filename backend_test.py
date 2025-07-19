@@ -3248,14 +3248,23 @@ def run_all_tests():
     print(f"\n🎯 Overall Result: {passed}/{total} tests passed")
     print(f"📊 Analytics Result: {analytics_passed}/{len(analytics_tests)} tests passed")
     print(f"📋 Reporting Result: {reporting_passed}/{len(reporting_tests)} tests passed")
+    print(f"🤝 Collaboration Result: {collaboration_passed}/{len(collaboration_tests)} tests passed")
+    print(f"🔮 Predictive Analytics Result: {predictive_passed}/{len(predictive_tests)} tests passed")
+    print(f"🧠 Emotional Intelligence Result: {emotion_passed}/{len(emotion_tests)} tests passed")
     print(f"🤖 AI Content Generation Result: {content_passed}/{len(content_tests)} tests passed")
     print(f"🎤 Speech-to-Text Result: {stt_passed}/{len(stt_tests)} tests passed")
     
-    # Calculate Phase 2 success rate
-    phase2_passed = analytics_passed + reporting_passed
-    phase2_total = len(analytics_tests) + len(reporting_tests)
+    # Calculate Phase 2 success rate (all Phase 2 features)
+    phase2_passed = analytics_passed + reporting_passed + collaboration_passed + predictive_passed + emotion_passed
+    phase2_total = len(analytics_tests) + len(reporting_tests) + len(collaboration_tests) + len(predictive_tests) + len(emotion_tests)
     
-    print(f"\n🎯 PHASE 2 SUCCESS RATE: {phase2_passed}/{phase2_total} ({phase2_passed/phase2_total*100:.1f}%)")
+    print(f"\n🎯 PHASE 2 COMPLETE SUCCESS RATE: {phase2_passed}/{phase2_total} ({phase2_passed/phase2_total*100:.1f}%)")
+    
+    # Calculate Phase 2 NEW FEATURES success rate (collaboration, predictive, emotion)
+    phase2_new_passed = collaboration_passed + predictive_passed + emotion_passed
+    phase2_new_total = len(collaboration_tests) + len(predictive_tests) + len(emotion_tests)
+    
+    print(f"🚀 PHASE 2 NEW FEATURES SUCCESS RATE: {phase2_new_passed}/{phase2_new_total} ({phase2_new_passed/phase2_new_total*100:.1f}%)")
     
     if passed == total:
         print("🎉 All tests passed! PathwayIQ backend with Phase 2 Analytics & Reporting is working correctly.")
