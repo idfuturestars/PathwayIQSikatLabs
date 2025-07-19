@@ -1568,6 +1568,674 @@ def test_content_generation_error_handling():
         print_result(False, f"Error handling test failed with exception: {e}")
         return False
 
+# ============================================================================
+# ANALYTICS AND REPORTING TESTS - PHASE 2 IMPLEMENTATION
+# ============================================================================
+
+def test_analytics_user_performance():
+    """Test GET /api/analytics/user/performance"""
+    print_test_header("Analytics - User Performance")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test with different time periods
+        time_periods = ["7d", "30d", "90d"]
+        
+        for period in time_periods:
+            response = requests.get(
+                f"{API_BASE}/analytics/user/performance?time_period={period}",
+                headers=headers,
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print_result(True, f"User performance analytics retrieved for {period}")
+                
+                # Check response structure
+                expected_fields = ["user_id", "time_period", "performance_metrics", "learning_analytics", "skill_progress"]
+                for field in expected_fields:
+                    if field in data:
+                        print_result(True, f"Response contains {field}")
+                    else:
+                        print_result(False, f"Response missing {field}")
+                
+                # Verify time period matches
+                if data.get("time_period") == period:
+                    print_result(True, f"Time period matches request: {period}")
+                else:
+                    print_result(False, f"Time period mismatch: expected {period}, got {data.get('time_period')}")
+                
+                print(f"   Time Period: {period}")
+                print(f"   User ID: {data.get('user_id', 'N/A')}")
+                
+            else:
+                print_result(False, f"User performance analytics failed for {period} with status {response.status_code}", response.text)
+                return False
+        
+        return True
+        
+    except Exception as e:
+        print_result(False, f"User performance analytics failed with exception: {e}")
+        return False
+
+def test_analytics_dashboard():
+    """Test GET /api/analytics/dashboard"""
+    print_test_header("Analytics - Dashboard")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/analytics/dashboard?time_period=30d",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Analytics dashboard retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["user_id", "dashboard_data", "learning_insights", "recommendations", "progress_summary"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Dashboard contains {field}")
+                else:
+                    print_result(False, f"Dashboard missing {field}")
+            
+            # Check dashboard data structure
+            dashboard_data = data.get("dashboard_data", {})
+            if isinstance(dashboard_data, dict):
+                dashboard_fields = ["overall_progress", "recent_activity", "skill_breakdown", "engagement_metrics"]
+                for field in dashboard_fields:
+                    if field in dashboard_data:
+                        print_result(True, f"Dashboard data contains {field}")
+                    else:
+                        print_result(False, f"Dashboard data missing {field}")
+            
+            print(f"   User ID: {data.get('user_id', 'N/A')}")
+            
+            return True
+        else:
+            print_result(False, f"Analytics dashboard failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Analytics dashboard failed with exception: {e}")
+        return False
+
+def test_analytics_class():
+    """Test GET /api/analytics/class (requires teacher/admin role)"""
+    print_test_header("Analytics - Class Analytics")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/analytics/class",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Class analytics retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["class_id", "class_analytics", "student_performance", "engagement_summary"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Class analytics contains {field}")
+                else:
+                    print_result(False, f"Class analytics missing {field}")
+            
+            return True
+        elif response.status_code == 403:
+            print_result(True, "Class analytics properly requires teacher/admin role (403 Forbidden)")
+            return True
+        else:
+            print_result(False, f"Class analytics failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Class analytics failed with exception: {e}")
+        return False
+
+def test_analytics_snapshot():
+    """Test POST /api/analytics/snapshot"""
+    print_test_header("Analytics - Store Snapshot")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/analytics/snapshot",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Analytics snapshot stored successfully")
+            
+            # Check response structure
+            expected_fields = ["snapshot_id", "user_id", "timestamp", "analytics_data"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Snapshot response contains {field}")
+                else:
+                    print_result(False, f"Snapshot response missing {field}")
+            
+            print(f"   Snapshot ID: {data.get('snapshot_id', 'N/A')}")
+            print(f"   Timestamp: {data.get('timestamp', 'N/A')}")
+            
+            return True
+        else:
+            print_result(False, f"Analytics snapshot failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Analytics snapshot failed with exception: {e}")
+        return False
+
+def test_analytics_history():
+    """Test GET /api/analytics/history"""
+    print_test_header("Analytics - History")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/analytics/history?days=30",
+            headers=headers,
+            timeout=15
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Analytics history retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["user_id", "history_data", "time_range", "snapshots"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"History response contains {field}")
+                else:
+                    print_result(False, f"History response missing {field}")
+            
+            snapshots = data.get("snapshots", [])
+            print(f"   Historical snapshots: {len(snapshots)}")
+            print(f"   Time range: {data.get('time_range', 'N/A')}")
+            
+            return True
+        else:
+            print_result(False, f"Analytics history failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Analytics history failed with exception: {e}")
+        return False
+
+def test_reports_student_progress():
+    """Test POST /api/reports/student-progress"""
+    print_test_header("Reports - Student Progress")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Test with current user as student_id
+        student_id = user_data.get('id', 'test_student') if user_data else 'test_student'
+        
+        # Test both PDF and CSV formats
+        formats = ["pdf", "csv"]
+        
+        for format_type in formats:
+            response = requests.post(
+                f"{API_BASE}/reports/student-progress?format={format_type}&date_range=30d",
+                json={"student_id": student_id},
+                headers=headers,
+                timeout=20
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                print_result(True, f"Student progress report generated successfully ({format_type})")
+                
+                # Check response structure
+                expected_fields = ["report_id", "format", "student_id", "generated_at", "report_data"]
+                for field in expected_fields:
+                    if field in data:
+                        print_result(True, f"Report response contains {field}")
+                    else:
+                        print_result(False, f"Report response missing {field}")
+                
+                # Verify format matches
+                if data.get("format") == format_type:
+                    print_result(True, f"Report format matches request: {format_type}")
+                else:
+                    print_result(False, f"Format mismatch: expected {format_type}, got {data.get('format')}")
+                
+                print(f"   Report ID: {data.get('report_id', 'N/A')}")
+                print(f"   Format: {format_type}")
+                
+            elif response.status_code == 403:
+                print_result(True, f"Student progress report properly requires appropriate permissions (403 Forbidden)")
+            else:
+                print_result(False, f"Student progress report failed for {format_type} with status {response.status_code}", response.text)
+                return False
+        
+        return True
+        
+    except Exception as e:
+        print_result(False, f"Student progress report failed with exception: {e}")
+        return False
+
+def test_reports_class_performance():
+    """Test POST /api/reports/class-performance"""
+    print_test_header("Reports - Class Performance")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/reports/class-performance?format=pdf",
+            headers=headers,
+            timeout=20
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Class performance report generated successfully")
+            
+            # Check response structure
+            expected_fields = ["report_id", "format", "class_id", "generated_at", "report_data"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Class report contains {field}")
+                else:
+                    print_result(False, f"Class report missing {field}")
+            
+            print(f"   Report ID: {data.get('report_id', 'N/A')}")
+            
+            return True
+        elif response.status_code == 403:
+            print_result(True, "Class performance report properly requires teacher/admin role (403 Forbidden)")
+            return True
+        else:
+            print_result(False, f"Class performance report failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Class performance report failed with exception: {e}")
+        return False
+
+def test_reports_assessment_analysis():
+    """Test POST /api/reports/assessment-analysis"""
+    print_test_header("Reports - Assessment Analysis")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/reports/assessment-analysis?format=csv&date_range=30d",
+            headers=headers,
+            timeout=20
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Assessment analysis report generated successfully")
+            
+            # Check response structure
+            expected_fields = ["report_id", "format", "date_range", "generated_at", "report_data"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Assessment report contains {field}")
+                else:
+                    print_result(False, f"Assessment report missing {field}")
+            
+            print(f"   Report ID: {data.get('report_id', 'N/A')}")
+            print(f"   Date Range: {data.get('date_range', 'N/A')}")
+            
+            return True
+        elif response.status_code == 403:
+            print_result(True, "Assessment analysis report properly requires appropriate permissions (403 Forbidden)")
+            return True
+        else:
+            print_result(False, f"Assessment analysis report failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Assessment analysis report failed with exception: {e}")
+        return False
+
+def test_reports_templates():
+    """Test GET /api/reports/templates"""
+    print_test_header("Reports - Get Templates")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/reports/templates",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Report templates retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["templates", "total"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Templates response contains {field}")
+                else:
+                    print_result(False, f"Templates response missing {field}")
+            
+            templates = data.get("templates", [])
+            print(f"   Available templates: {len(templates)}")
+            
+            # Check template structure if available
+            if templates:
+                template = templates[0]
+                template_fields = ["id", "name", "description", "format", "category"]
+                for field in template_fields:
+                    if field in template:
+                        print_result(True, f"Template contains {field}")
+                    else:
+                        print_result(False, f"Template missing {field}")
+            
+            return True
+        elif response.status_code == 403:
+            print_result(True, "Report templates properly requires educator access (403 Forbidden)")
+            return True
+        else:
+            print_result(False, f"Report templates failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Report templates failed with exception: {e}")
+        return False
+
+def test_reports_educator():
+    """Test GET /api/reports/educator"""
+    print_test_header("Reports - Get Educator Reports")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/reports/educator?limit=10",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Educator reports retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["reports", "total", "educator_id"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Educator reports contains {field}")
+                else:
+                    print_result(False, f"Educator reports missing {field}")
+            
+            reports = data.get("reports", [])
+            print(f"   Educator reports: {len(reports)}")
+            
+            # Check report structure if available
+            if reports:
+                report = reports[0]
+                report_fields = ["id", "title", "format", "created_at", "status"]
+                for field in report_fields:
+                    if field in report:
+                        print_result(True, f"Report contains {field}")
+                    else:
+                        print_result(False, f"Report missing {field}")
+            
+            return True
+        elif response.status_code == 403:
+            print_result(True, "Educator reports properly requires educator access (403 Forbidden)")
+            return True
+        else:
+            print_result(False, f"Educator reports failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Educator reports failed with exception: {e}")
+        return False
+
+def test_reports_delete():
+    """Test DELETE /api/reports/{report_id}"""
+    print_test_header("Reports - Delete Report")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Use a test report ID
+        test_report_id = f"test_report_{uuid.uuid4().hex[:8]}"
+        
+        response = requests.delete(
+            f"{API_BASE}/reports/{test_report_id}",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Report deletion successful")
+            
+            # Check response structure
+            expected_fields = ["success", "message", "report_id"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Delete response contains {field}")
+                else:
+                    print_result(False, f"Delete response missing {field}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Report not found (expected for test report)")
+            return True
+        elif response.status_code == 403:
+            print_result(True, "Report deletion properly requires appropriate permissions (403 Forbidden)")
+            return True
+        else:
+            print_result(False, f"Report deletion failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Report deletion failed with exception: {e}")
+        return False
+
+def test_analytics_authentication():
+    """Test analytics endpoints without authentication"""
+    print_test_header("Analytics Authentication Test")
+    
+    try:
+        # Test analytics endpoints without auth
+        endpoints = [
+            "/analytics/user/performance",
+            "/analytics/dashboard", 
+            "/analytics/class",
+            "/analytics/history"
+        ]
+        
+        for endpoint in endpoints:
+            response = requests.get(
+                f"{API_BASE}{endpoint}",
+                timeout=10
+            )
+            
+            if response.status_code in [401, 403]:
+                print_result(True, f"{endpoint} properly requires authentication (status {response.status_code})")
+            else:
+                print_result(False, f"{endpoint} should return 401/403, got {response.status_code}")
+                return False
+        
+        # Test POST endpoints
+        post_endpoints = ["/analytics/snapshot"]
+        
+        for endpoint in post_endpoints:
+            response = requests.post(
+                f"{API_BASE}{endpoint}",
+                timeout=10
+            )
+            
+            if response.status_code in [401, 403]:
+                print_result(True, f"{endpoint} properly requires authentication (status {response.status_code})")
+            else:
+                print_result(False, f"{endpoint} should return 401/403, got {response.status_code}")
+                return False
+        
+        return True
+        
+    except Exception as e:
+        print_result(False, f"Analytics authentication test failed with exception: {e}")
+        return False
+
+def test_reports_authentication():
+    """Test reporting endpoints without authentication"""
+    print_test_header("Reports Authentication Test")
+    
+    try:
+        # Test GET endpoints without auth
+        get_endpoints = [
+            "/reports/templates",
+            "/reports/educator"
+        ]
+        
+        for endpoint in get_endpoints:
+            response = requests.get(
+                f"{API_BASE}{endpoint}",
+                timeout=10
+            )
+            
+            if response.status_code in [401, 403]:
+                print_result(True, f"{endpoint} properly requires authentication (status {response.status_code})")
+            else:
+                print_result(False, f"{endpoint} should return 401/403, got {response.status_code}")
+                return False
+        
+        # Test POST endpoints without auth
+        post_endpoints = [
+            "/reports/student-progress",
+            "/reports/class-performance", 
+            "/reports/assessment-analysis"
+        ]
+        
+        for endpoint in post_endpoints:
+            response = requests.post(
+                f"{API_BASE}{endpoint}",
+                timeout=10
+            )
+            
+            if response.status_code in [401, 403]:
+                print_result(True, f"{endpoint} properly requires authentication (status {response.status_code})")
+            else:
+                print_result(False, f"{endpoint} should return 401/403, got {response.status_code}")
+                return False
+        
+        # Test DELETE endpoint without auth
+        response = requests.delete(
+            f"{API_BASE}/reports/test_report",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"/reports/{{report_id}} properly requires authentication (status {response.status_code})")
+            return True
+        else:
+            print_result(False, f"/reports/{{report_id}} should return 401/403, got {response.status_code}")
+            return False
+        
+    except Exception as e:
+        print_result(False, f"Reports authentication test failed with exception: {e}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print(f"\n🚀 Starting PathwayIQ Backend API Tests")
@@ -1584,6 +2252,28 @@ def run_all_tests():
     # Authentication tests
     test_results['demo_login'] = test_demo_login()  # Use demo login for all tests
     test_results['database'] = test_database_connection()
+    
+    # PHASE 2: ANALYTICS AND REPORTING TESTS (MAIN FOCUS)
+    print(f"\n{'='*60}")
+    print("📊 PHASE 2: ANALYTICS AND REPORTING FUNCTIONALITY TESTING")
+    print(f"{'='*60}")
+    
+    # Analytics endpoints
+    test_results['analytics_auth'] = test_analytics_authentication()
+    test_results['analytics_user_performance'] = test_analytics_user_performance()
+    test_results['analytics_dashboard'] = test_analytics_dashboard()
+    test_results['analytics_class'] = test_analytics_class()
+    test_results['analytics_snapshot'] = test_analytics_snapshot()
+    test_results['analytics_history'] = test_analytics_history()
+    
+    # Reporting endpoints
+    test_results['reports_auth'] = test_reports_authentication()
+    test_results['reports_student_progress'] = test_reports_student_progress()
+    test_results['reports_class_performance'] = test_reports_class_performance()
+    test_results['reports_assessment_analysis'] = test_reports_assessment_analysis()
+    test_results['reports_templates'] = test_reports_templates()
+    test_results['reports_educator'] = test_reports_educator()
+    test_results['reports_delete'] = test_reports_delete()
     
     # AI Content Generation tests (main focus of this testing session)
     print(f"\n{'='*60}")
