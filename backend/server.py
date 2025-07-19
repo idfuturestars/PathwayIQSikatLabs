@@ -42,6 +42,11 @@ from leaderboard_system import get_leaderboard_system, LeaderboardCategory
 from analytics_engine import AnalyticsEngine
 from reporting_system import ReportingSystem
 
+# Import collaboration, predictive, and emotion modules
+from collaboration_engine import CollaborationEngine
+from predictive_engine import PredictiveEngine
+from emotion_engine import EmotionEngine
+
 # Import adaptive engine
 import sys
 import os
