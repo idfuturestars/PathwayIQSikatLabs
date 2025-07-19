@@ -38,6 +38,10 @@ from content_generator import get_content_generator, ContentGenerationRequest
 from gamification_engine import get_gamification_engine
 from leaderboard_system import get_leaderboard_system, LeaderboardCategory
 
+# Import analytics and reporting modules
+from analytics_engine import AnalyticsEngine
+from reporting_system import ReportingSystem
+
 # Import adaptive engine
 import sys
 import os
