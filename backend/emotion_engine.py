@@ -285,7 +285,7 @@ class EmotionEngine:
         """Create comprehensive emotional learning profile for a user"""
         try:
             # Get comprehensive user data
-            user = self.users_collection.find_one({"user_id": user_id})
+            user = self.users_collection.find_one({"id": user_id})
             if not user:
                 return {"error": "User not found"}
 
