@@ -561,13 +561,13 @@ class CollaborationEngine:
                     del project["_id"]
                 
                 # Get creator info
-                creator = self.users_collection.find_one({"user_id": project["created_by"]})
+                creator = self.users_collection.find_one({"id": project["created_by"]})
                 project["created_by_name"] = creator.get("username", "Unknown") if creator else "Unknown"
                 
                 # Add team member names
                 team_member_names = []
                 for member_id in project["team_members"]:
-                    member = self.users_collection.find_one({"user_id": member_id})
+                    member = self.users_collection.find_one({"id": member_id})
                     if member:
                         team_member_names.append(member.get("username", "Unknown"))
                 project["team_member_names"] = team_member_names
