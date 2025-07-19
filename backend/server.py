@@ -2113,6 +2113,312 @@ async def get_group_analytics(
         logger.error(f"Error getting group analytics: {e}")
         raise HTTPException(status_code=500, detail="Failed to get analytics")
 
+# ============================================================================
+# ADVANCED LEARNING ANALYTICS DASHBOARD
+# ============================================================================
+
+@api_router.get("/analytics/dashboard/user")
+async def get_user_learning_dashboard(
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive learning dashboard for current user"""
+    try:
+        dashboard = await learning_analytics.get_user_learning_dashboard(
+            user_id=current_user.id,
+            days=days
+        )
+        
+        if "error" in dashboard:
+            raise HTTPException(status_code=404, detail=dashboard["error"])
+        
+        return {
+            "success": True,
+            "dashboard": dashboard
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user learning dashboard: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get learning dashboard")
+
+@api_router.get("/analytics/dashboard/educator")
+async def get_educator_dashboard(
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive dashboard for educators"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        dashboard = await learning_analytics.get_educator_dashboard(
+            educator_id=current_user.id,
+            days=days
+        )
+        
+        if "error" in dashboard:
+            raise HTTPException(status_code=500, detail=dashboard["error"])
+        
+        return {
+            "success": True,
+            "dashboard": dashboard
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting educator dashboard: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get educator dashboard")
+
+@api_router.get("/analytics/performance/trends")
+async def get_performance_trends(
+    days: int = 90,
+    subject: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get detailed performance trends for a user"""
+    try:
+        # Get user's assessment history
+        since_date = datetime.utcnow() - timedelta(days=days)
+        
+        query = {
+            "user_id": current_user.id,
+            "created_at": {"$gte": since_date}
+        }
+        
+        if subject:
+            query["subject"] = subject
+        
+        assessments = list(db.assessments.find(query).sort("created_at", 1))
+        
+        if not assessments:
+            return {
+                "success": True,
+                "trends": {
+                    "data_points": 0,
+                    "trend": "no_data",
+                    "message": "No assessment data available for the selected period"
+                }
+            }
+        
+        # Calculate trends
+        dates = []
+        scores = []
+        abilities = []
+        
+        for assessment in assessments:
+            dates.append(assessment["created_at"].isoformat())
+            scores.append(assessment.get("final_score", 0))
+            abilities.append(assessment.get("final_ability_estimate", 0))
+        
+        # Calculate trend direction
+        if len(scores) >= 3:
+            recent_avg = sum(scores[-3:]) / 3
+            early_avg = sum(scores[:3]) / 3
+            trend_direction = "improving" if recent_avg > early_avg else "declining" if recent_avg < early_avg else "stable"
+        else:
+            trend_direction = "insufficient_data"
+        
+        return {
+            "success": True,
+            "trends": {
+                "data_points": len(assessments),
+                "dates": dates,
+                "scores": scores,
+                "abilities": abilities,
+                "trend": trend_direction,
+                "latest_score": scores[-1] if scores else 0,
+                "average_score": sum(scores) / len(scores) if scores else 0,
+                "period_days": days,
+                "subject": subject
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting performance trends: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get performance trends")
+
+@api_router.get("/analytics/insights/learning-patterns")
+async def get_learning_patterns(
+    days: int = 30,
+    current_user: User = Depends(get_current_user)
+):
+    """Get detailed learning patterns and insights"""
+    try:
+        since_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Get all user activities
+        activities = {
+            "assessments": list(db.assessments.find({
+                "user_id": current_user.id,
+                "created_at": {"$gte": since_date}
+            })),
+            "content_generation": list(db.content_generation.find({
+                "user_id": current_user.id,
+                "created_at": {"$gte": since_date}
+            })),
+            "group_messages": list(db.group_messages.find({
+                "user_id": current_user.id,
+                "timestamp": {"$gte": since_date}
+            }))
+        }
+        
+        # Analyze patterns
+        daily_activity = defaultdict(lambda: {"assessments": 0, "content": 0, "messages": 0})
+        hourly_distribution = defaultdict(int)
+        subject_focus = defaultdict(int)
+        
+        # Process assessments
+        for assessment in activities["assessments"]:
+            date_key = assessment["created_at"].date().isoformat()
+            hour_key = assessment["created_at"].hour
+            
+            daily_activity[date_key]["assessments"] += 1
+            hourly_distribution[hour_key] += 1
+            subject_focus[assessment.get("subject", "unknown")] += 1
+        
+        # Process content generation
+        for content in activities["content_generation"]:
+            date_key = content["created_at"].date().isoformat()
+            hour_key = content["created_at"].hour
+            
+            daily_activity[date_key]["content"] += 1
+            hourly_distribution[hour_key] += 1
+        
+        # Process messages
+        for message in activities["group_messages"]:
+            date_key = message["timestamp"].date().isoformat()
+            hour_key = message["timestamp"].hour
+            
+            daily_activity[date_key]["messages"] += 1
+            hourly_distribution[hour_key] += 1
+        
+        # Calculate insights
+        total_active_days = len(daily_activity)
+        most_active_hour = max(hourly_distribution.items(), key=lambda x: x[1])[0] if hourly_distribution else 12
+        favorite_subject = max(subject_focus.items(), key=lambda x: x[1])[0] if subject_focus else "None"
+        
+        return {
+            "success": True,
+            "patterns": {
+                "active_days": total_active_days,
+                "daily_activity": dict(daily_activity),
+                "hourly_distribution": dict(hourly_distribution),
+                "most_active_hour": most_active_hour,
+                "subject_focus": dict(subject_focus),
+                "favorite_subject": favorite_subject,
+                "consistency_score": min(100, (total_active_days / days) * 100),
+                "period_days": days
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting learning patterns: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get learning patterns")
+
+@api_router.get("/analytics/class-overview")
+async def get_class_overview(
+    days: int = 30,
+    subject: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get class overview for educators (aggregated student data)"""
+    try:
+        # Check if user is an educator
+        if current_user.role not in ["teacher", "admin"]:
+            raise HTTPException(status_code=403, detail="Access denied. Educator role required.")
+        
+        since_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Build query
+        query = {"created_at": {"$gte": since_date}}
+        if subject:
+            query["subject"] = subject
+        
+        # Aggregate class performance
+        pipeline = [
+            {"$match": query},
+            {
+                "$group": {
+                    "_id": "$user_id",
+                    "avg_score": {"$avg": "$final_score"},
+                    "assessment_count": {"$sum": 1},
+                    "latest_assessment": {"$max": "$created_at"}
+                }
+            },
+            {
+                "$group": {
+                    "_id": None,
+                    "total_students": {"$sum": 1},
+                    "class_avg_score": {"$avg": "$avg_score"},
+                    "total_assessments": {"$sum": "$assessment_count"},
+                    "score_distribution": {
+                        "$push": {
+                            "student_id": "$_id",
+                            "avg_score": "$avg_score",
+                            "assessment_count": "$assessment_count"
+                        }
+                    }
+                }
+            }
+        ]
+        
+        result = list(db.assessments.aggregate(pipeline))
+        
+        if not result:
+            return {
+                "success": True,
+                "overview": {
+                    "total_students": 0,
+                    "class_average": 0,
+                    "total_assessments": 0,
+                    "performance_distribution": {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0},
+                    "subject": subject,
+                    "period_days": days
+                }
+            }
+        
+        data = result[0]
+        
+        # Calculate grade distribution
+        scores = [student["avg_score"] for student in data["score_distribution"]]
+        grade_distribution = {
+            "A": len([s for s in scores if s >= 90]),
+            "B": len([s for s in scores if 80 <= s < 90]),
+            "C": len([s for s in scores if 70 <= s < 80]),
+            "D": len([s for s in scores if 60 <= s < 70]),
+            "F": len([s for s in scores if s < 60])
+        }
+        
+        return {
+            "success": True,
+            "overview": {
+                "total_students": data["total_students"],
+                "class_average": round(data["class_avg_score"], 2),
+                "total_assessments": data["total_assessments"],
+                "performance_distribution": grade_distribution,
+                "subject": subject,
+                "period_days": days,
+                "individual_scores": [
+                    {
+                        "student_id": student["student_id"],
+                        "avg_score": round(student["avg_score"], 2),
+                        "assessment_count": student["assessment_count"]
+                    }
+                    for student in data["score_distribution"]
+                ]
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting class overview: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get class overview")
+
 # Include the router in the main app
 app.include_router(api_router)
 
