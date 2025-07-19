@@ -461,7 +461,7 @@ class CollaborationEngine:
                     del discussion["_id"]
                 
                 # Get creator info
-                creator = self.users_collection.find_one({"user_id": discussion["created_by"]})
+                creator = self.users_collection.find_one({"id": discussion["created_by"]})
                 discussion["created_by_name"] = creator.get("username", "Unknown") if creator else "Unknown"
 
             return {
