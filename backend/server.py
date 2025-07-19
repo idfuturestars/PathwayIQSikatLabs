@@ -74,6 +74,9 @@ REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
 
+# Initialize study groups engine
+study_groups_engine = StudyGroupsEngine(MONGO_URL, REDIS_URL)
+
 # Initialize OpenAI client
 from openai import AsyncOpenAI
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
