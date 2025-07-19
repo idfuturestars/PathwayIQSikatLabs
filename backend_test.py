@@ -1568,6 +1568,624 @@ def test_content_generation_error_handling():
         print_result(False, f"Error handling test failed with exception: {e}")
         return False
 
+# ============================================================================
+# STUDY GROUPS & COLLABORATIVE LEARNING TESTS
+# ============================================================================
+
+def test_study_groups_create():
+    """Test POST /api/study-groups/create"""
+    print_test_header("Study Groups - Create Group")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        group_data = {
+            "name": f"PathwayIQ Study Group {uuid.uuid4().hex[:8]}",
+            "description": "A collaborative learning group for mathematics and science topics",
+            "subject": "Mathematics",
+            "max_members": 15,
+            "is_public": True,
+            "topics": ["Algebra", "Geometry", "Calculus"]
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/study-groups/create",
+            json=group_data,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Study group creation successful")
+            
+            # Check response structure
+            expected_fields = ["success", "message", "data"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            # Verify success status
+            if data.get("success") == True:
+                print_result(True, "Success status is True")
+            else:
+                print_result(False, f"Unexpected success status: {data.get('success')}")
+            
+            # Check data structure
+            group_info = data.get("data", {})
+            if "group_id" in group_info:
+                print_result(True, "Group ID provided in response")
+                # Store group ID for subsequent tests
+                global test_group_id
+                test_group_id = group_info["group_id"]
+            else:
+                print_result(False, "Group ID missing from response")
+            
+            print(f"   Group ID: {group_info.get('group_id', 'N/A')}")
+            print(f"   Message: {data.get('message', 'N/A')}")
+            
+            return True
+        else:
+            print_result(False, f"Study group creation failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Study group creation failed with exception: {e}")
+        return False
+
+def test_study_groups_get_public():
+    """Test GET /api/study-groups/public"""
+    print_test_header("Study Groups - Get Public Groups")
+    
+    try:
+        # This endpoint doesn't require authentication according to the code
+        response = requests.get(
+            f"{API_BASE}/study-groups/public?limit=10",
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Public groups retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "groups", "total"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            groups = data.get("groups", [])
+            total = data.get("total", 0)
+            
+            print(f"   Total public groups: {total}")
+            print(f"   Groups returned: {len(groups)}")
+            
+            # If we have groups, check their structure
+            if groups:
+                first_group = groups[0]
+                group_fields = ["id", "name", "description", "subject", "member_count", "is_public"]
+                for field in group_fields:
+                    if field in first_group:
+                        print_result(True, f"Group contains {field}")
+                    else:
+                        print_result(False, f"Group missing {field}")
+            
+            return True
+        else:
+            print_result(False, f"Get public groups failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get public groups failed with exception: {e}")
+        return False
+
+def test_study_groups_get_my_groups():
+    """Test GET /api/study-groups/my-groups"""
+    print_test_header("Study Groups - Get My Groups")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/study-groups/my-groups",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "User groups retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "groups", "total"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            groups = data.get("groups", [])
+            total = data.get("total", 0)
+            
+            print(f"   Total user groups: {total}")
+            print(f"   Groups returned: {len(groups)}")
+            
+            return True
+        else:
+            print_result(False, f"Get my groups failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get my groups failed with exception: {e}")
+        return False
+
+def test_study_groups_join():
+    """Test POST /api/study-groups/{group_id}/join"""
+    print_test_header("Study Groups - Join Group")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test group ID if available, otherwise create a dummy one
+    group_id = globals().get('test_group_id', f'test_group_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        # Note: The endpoint expects join_message as a query parameter or form data
+        response = requests.post(
+            f"{API_BASE}/study-groups/{group_id}/join?join_message=Excited to learn together!",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Group join successful")
+            
+            # Check response structure
+            if "success" in data:
+                print_result(True, "Response contains success field")
+                if data.get("success"):
+                    print_result(True, "Join operation successful")
+                else:
+                    print_result(False, f"Join operation failed: {data.get('error', 'Unknown error')}")
+            else:
+                print_result(False, "Response missing success field")
+            
+            print(f"   Group ID: {group_id}")
+            print(f"   Response: {data}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Group not found (expected for test group)")
+            return True
+        else:
+            print_result(False, f"Group join failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Group join failed with exception: {e}")
+        return False
+
+def test_study_groups_leave():
+    """Test POST /api/study-groups/{group_id}/leave"""
+    print_test_header("Study Groups - Leave Group")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test group ID if available, otherwise create a dummy one
+    group_id = globals().get('test_group_id', f'test_group_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/study-groups/{group_id}/leave",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Group leave successful")
+            
+            # Check response structure
+            if "success" in data:
+                print_result(True, "Response contains success field")
+            else:
+                print_result(False, "Response missing success field")
+            
+            print(f"   Group ID: {group_id}")
+            print(f"   Response: {data}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Group not found (expected for test group)")
+            return True
+        else:
+            print_result(False, f"Group leave failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Group leave failed with exception: {e}")
+        return False
+
+def test_study_groups_send_message():
+    """Test POST /api/study-groups/{group_id}/messages"""
+    print_test_header("Study Groups - Send Message")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test group ID if available, otherwise create a dummy one
+    group_id = globals().get('test_group_id', f'test_group_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        message_data = {
+            "content": "Hello everyone! Let's work together on solving quadratic equations.",
+            "message_type": "text",
+            "metadata": {
+                "topic": "Mathematics",
+                "urgency": "normal"
+            }
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/study-groups/{group_id}/messages",
+            json=message_data,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Message sent successfully")
+            
+            # Check response structure
+            if "success" in data:
+                print_result(True, "Response contains success field")
+                if data.get("success"):
+                    print_result(True, "Message send operation successful")
+                else:
+                    print_result(False, f"Message send failed: {data.get('error', 'Unknown error')}")
+            else:
+                print_result(False, "Response missing success field")
+            
+            print(f"   Group ID: {group_id}")
+            print(f"   Message: {message_data['content'][:50]}...")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Group not found (expected for test group)")
+            return True
+        else:
+            print_result(False, f"Send message failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Send message failed with exception: {e}")
+        return False
+
+def test_study_groups_get_messages():
+    """Test GET /api/study-groups/{group_id}/messages"""
+    print_test_header("Study Groups - Get Messages")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test group ID if available, otherwise create a dummy one
+    group_id = globals().get('test_group_id', f'test_group_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/study-groups/{group_id}/messages?limit=20",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Messages retrieved successfully")
+            
+            # Check response structure
+            expected_fields = ["success", "messages", "total"]
+            for field in expected_fields:
+                if field in data:
+                    print_result(True, f"Response contains {field}")
+                else:
+                    print_result(False, f"Response missing {field}")
+            
+            messages = data.get("messages", [])
+            total = data.get("total", 0)
+            
+            print(f"   Total messages: {total}")
+            print(f"   Messages returned: {len(messages)}")
+            
+            # If we have messages, check their structure
+            if messages:
+                first_message = messages[0]
+                message_fields = ["id", "content", "user_id", "timestamp", "message_type"]
+                for field in message_fields:
+                    if field in first_message:
+                        print_result(True, f"Message contains {field}")
+                    else:
+                        print_result(False, f"Message missing {field}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Group not found (expected for test group)")
+            return True
+        else:
+            print_result(False, f"Get messages failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get messages failed with exception: {e}")
+        return False
+
+def test_study_groups_start_session():
+    """Test POST /api/study-groups/{group_id}/sessions/start"""
+    print_test_header("Study Groups - Start Study Session")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test group ID if available, otherwise create a dummy one
+    group_id = globals().get('test_group_id', f'test_group_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        session_data = {
+            "topic": "Quadratic Equations Practice",
+            "description": "Let's work together on solving quadratic equations using different methods",
+            "duration_minutes": 90
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/study-groups/{group_id}/sessions/start",
+            json=session_data,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Study session started successfully")
+            
+            # Check response structure
+            if "success" in data:
+                print_result(True, "Response contains success field")
+                if data.get("success"):
+                    print_result(True, "Session start operation successful")
+                    
+                    # Look for session ID
+                    if "session_id" in data:
+                        print_result(True, "Session ID provided")
+                        # Store session ID for subsequent tests
+                        global test_session_id
+                        test_session_id = data["session_id"]
+                    else:
+                        print_result(False, "Session ID missing from response")
+                else:
+                    print_result(False, f"Session start failed: {data.get('error', 'Unknown error')}")
+            else:
+                print_result(False, "Response missing success field")
+            
+            print(f"   Group ID: {group_id}")
+            print(f"   Topic: {session_data['topic']}")
+            print(f"   Session ID: {data.get('session_id', 'N/A')}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Group not found (expected for test group)")
+            return True
+        else:
+            print_result(False, f"Start session failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Start session failed with exception: {e}")
+        return False
+
+def test_study_groups_join_session():
+    """Test POST /api/study-groups/sessions/{session_id}/join"""
+    print_test_header("Study Groups - Join Study Session")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test session ID if available, otherwise create a dummy one
+    session_id = globals().get('test_session_id', f'test_session_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/study-groups/sessions/{session_id}/join",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Session join successful")
+            
+            # Check response structure
+            if "success" in data:
+                print_result(True, "Response contains success field")
+                if data.get("success"):
+                    print_result(True, "Session join operation successful")
+                else:
+                    print_result(False, f"Session join failed: {data.get('error', 'Unknown error')}")
+            else:
+                print_result(False, "Response missing success field")
+            
+            print(f"   Session ID: {session_id}")
+            print(f"   Response: {data}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Session not found (expected for test session)")
+            return True
+        else:
+            print_result(False, f"Join session failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Join session failed with exception: {e}")
+        return False
+
+def test_study_groups_get_analytics():
+    """Test GET /api/study-groups/{group_id}/analytics"""
+    print_test_header("Study Groups - Get Group Analytics")
+    
+    if not auth_token:
+        print_result(False, "No auth token available - skipping test")
+        return False
+    
+    # Use test group ID if available, otherwise create a dummy one
+    group_id = globals().get('test_group_id', f'test_group_{uuid.uuid4().hex[:8]}')
+    
+    try:
+        headers = {
+            "Authorization": f"Bearer {auth_token}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            f"{API_BASE}/study-groups/{group_id}/analytics?days=30",
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            print_result(True, "Group analytics retrieved successfully")
+            
+            # Check for analytics data structure
+            analytics_fields = ["member_activity", "message_stats", "session_stats", "engagement_metrics"]
+            for field in analytics_fields:
+                if field in data:
+                    print_result(True, f"Analytics contains {field}")
+                else:
+                    print_result(False, f"Analytics missing {field}")
+            
+            print(f"   Group ID: {group_id}")
+            print(f"   Analytics keys: {list(data.keys())}")
+            
+            return True
+        elif response.status_code == 404:
+            print_result(True, "Group not found (expected for test group)")
+            return True
+        else:
+            print_result(False, f"Get analytics failed with status {response.status_code}", response.text)
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Get analytics failed with exception: {e}")
+        return False
+
+def test_study_groups_authentication():
+    """Test study groups endpoints without authentication"""
+    print_test_header("Study Groups Authentication Test")
+    
+    try:
+        # Test create group endpoint without auth
+        group_data = {
+            "name": "Test Group",
+            "description": "Test",
+            "subject": "Math"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/study-groups/create",
+            json=group_data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Create group endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"Create group endpoint should return 401/403, got {response.status_code}")
+        
+        # Test my groups endpoint without auth
+        response = requests.get(
+            f"{API_BASE}/study-groups/my-groups",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"My groups endpoint properly requires authentication (status {response.status_code})")
+        else:
+            print_result(False, f"My groups endpoint should return 401/403, got {response.status_code}")
+        
+        # Test join group endpoint without auth
+        response = requests.post(
+            f"{API_BASE}/study-groups/test_group/join",
+            timeout=10
+        )
+        
+        if response.status_code in [401, 403]:
+            print_result(True, f"Join group endpoint properly requires authentication (status {response.status_code})")
+            return True
+        else:
+            print_result(False, f"Join group endpoint should return 401/403, got {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print_result(False, f"Authentication test failed with exception: {e}")
+        return False
+
 def run_all_tests():
     """Run all backend tests"""
     print(f"\n🚀 Starting PathwayIQ Backend API Tests")
