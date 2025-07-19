@@ -770,8 +770,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Advanced Learning Analytics Dashboard Backend"
-    - "Comprehensive Reporting for Educators Backend"
+    - "Study Groups & Collaborative Learning Backend"
+    - "Predictive Analytics Backend" 
+    - "Enhanced Emotional Intelligence Analysis Backend"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
