@@ -92,6 +92,9 @@ learning_analytics = LearningAnalytics(MONGO_URL, REDIS_URL)
 # Initialize reporting system
 reporting_system = ReportingSystem(MONGO_URL)
 
+# Initialize predictive analytics
+predictive_analytics = PredictiveAnalytics(MONGO_URL)
+
 # Initialize OpenAI client
 from openai import AsyncOpenAI
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
