@@ -3194,6 +3194,33 @@ def run_all_tests():
             if test_results[test_name]:
                 reporting_passed += 1
     
+    print("\n🤝 COLLABORATION FUNCTIONALITY (PHASE 2):")
+    collaboration_passed = 0
+    for test_name in collaboration_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('collaboration_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                collaboration_passed += 1
+    
+    print("\n🔮 PREDICTIVE ANALYTICS FUNCTIONALITY (PHASE 2):")
+    predictive_passed = 0
+    for test_name in predictive_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('predictive_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                predictive_passed += 1
+    
+    print("\n🧠 EMOTIONAL INTELLIGENCE FUNCTIONALITY (PHASE 2):")
+    emotion_passed = 0
+    for test_name in emotion_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('emotion_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                emotion_passed += 1
+    
     print("\n🤖 AI CONTENT GENERATION FUNCTIONALITY:")
     content_passed = 0
     for test_name in content_tests:
