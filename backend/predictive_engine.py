@@ -80,8 +80,9 @@ class PredictiveEngine:
         try:
             # Extract user features
             user_features = self._extract_user_features(user_id)
-            if not user_features:
-                return {"error": "Insufficient user data for prediction"}
+            if not user_features or user_features.get("total_questions_answered", 0) < 5:
+                # Provide baseline predictions for new users
+                return self._generate_baseline_predictions(user_id, prediction_horizon)
 
             # Get or train performance prediction model
             model = self._get_or_train_model("performance_prediction")
