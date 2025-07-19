@@ -47,6 +47,9 @@ from email_service import email_service
 # Import learning analytics
 from learning_analytics import LearningAnalytics
 
+# Import reporting system
+from reporting_system import ReportingSystem
+
 # Import adaptive engine
 import sys
 import os
