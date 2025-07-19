@@ -1828,6 +1828,296 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ============================================================================
+# ANALYTICS AND REPORTING ENDPOINTS - PHASE 2
+# ============================================================================
+
+# Initialize analytics and reporting systems
+analytics_engine = AnalyticsEngine()
+reporting_system = ReportingSystem()
+
+@api_router.get("/analytics/user/performance")
+async def get_user_performance_analytics(
+    current_user: User = Depends(get_current_user),
+    time_period: str = Query(default="30d", regex="^(7d|30d|90d)$")
+):
+    """Get comprehensive user performance analytics"""
+    try:
+        performance_summary = analytics_engine.get_user_performance_summary(current_user.id)
+        
+        if "error" in performance_summary:
+            raise HTTPException(status_code=404, detail=performance_summary["error"])
+        
+        return {
+            "success": True,
+            "time_period": time_period,
+            "data": performance_summary
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting user performance analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve performance analytics")
+
+@api_router.get("/analytics/dashboard")
+async def get_analytics_dashboard(
+    current_user: User = Depends(get_current_user),
+    time_period: str = Query(default="30d", regex="^(7d|30d|90d)$")
+):
+    """Get comprehensive learning analytics dashboard"""
+    try:
+        dashboard_data = analytics_engine.get_learning_analytics_dashboard(current_user.id, time_period)
+        
+        if "error" in dashboard_data:
+            raise HTTPException(status_code=500, detail=dashboard_data["error"])
+        
+        return {
+            "success": True,
+            "data": dashboard_data
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting analytics dashboard: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve analytics dashboard")
+
+@api_router.get("/analytics/class")
+async def get_class_analytics(
+    current_user: User = Depends(get_current_user),
+    class_id: Optional[str] = None
+):
+    """Get class-level analytics for educators"""
+    try:
+        # Verify educator permissions
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Educator access required")
+        
+        class_analytics = analytics_engine.get_class_analytics(current_user.id, class_id)
+        
+        if "error" in class_analytics:
+            raise HTTPException(status_code=500, detail=class_analytics["error"])
+        
+        return {
+            "success": True,
+            "data": class_analytics
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting class analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve class analytics")
+
+@api_router.post("/analytics/snapshot")
+async def store_analytics_snapshot(
+    current_user: User = Depends(get_current_user)
+):
+    """Store current analytics snapshot for historical tracking"""
+    try:
+        # Get current analytics data
+        analytics_data = analytics_engine.get_learning_analytics_dashboard(current_user.id, "30d")
+        
+        # Store snapshot
+        snapshot_id = analytics_engine.store_analytics_snapshot(current_user.id, analytics_data)
+        
+        if not snapshot_id:
+            raise HTTPException(status_code=500, detail="Failed to store analytics snapshot")
+        
+        return {
+            "success": True,
+            "snapshot_id": snapshot_id,
+            "message": "Analytics snapshot stored successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error storing analytics snapshot: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to store analytics snapshot")
+
+@api_router.get("/analytics/history")
+async def get_analytics_history(
+    current_user: User = Depends(get_current_user),
+    days: int = Query(default=30, ge=1, le=365)
+):
+    """Get analytics history for the user"""
+    try:
+        history = analytics_engine.get_analytics_history(current_user.id, days)
+        
+        return {
+            "success": True,
+            "data": history,
+            "period_days": days
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting analytics history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve analytics history")
+
+# Reporting Endpoints
+@api_router.post("/reports/student-progress")
+async def generate_student_progress_report(
+    student_id: str,
+    format: str = Query(default="pdf", regex="^(pdf|csv)$"),
+    date_range: str = Query(default="30d", regex="^(7d|30d|90d)$"),
+    current_user: User = Depends(get_current_user)
+):
+    """Generate student progress report (educators only)"""
+    try:
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Educator access required")
+        
+        report_result = reporting_system.generate_student_progress_report(
+            student_id=student_id,
+            educator_id=current_user.id,
+            format=format,
+            date_range=date_range
+        )
+        
+        if "error" in report_result:
+            raise HTTPException(status_code=400, detail=report_result["error"])
+        
+        return report_result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating student progress report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate student progress report")
+
+@api_router.post("/reports/class-performance")
+async def generate_class_performance_report(
+    format: str = Query(default="pdf", regex="^(pdf|csv)$"),
+    class_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate class performance report (educators only)"""
+    try:
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Educator access required")
+        
+        report_result = reporting_system.generate_class_performance_report(
+            educator_id=current_user.id,
+            class_id=class_id,
+            format=format
+        )
+        
+        if "error" in report_result:
+            raise HTTPException(status_code=400, detail=report_result["error"])
+        
+        return report_result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating class performance report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate class performance report")
+
+@api_router.post("/reports/assessment-analysis")
+async def generate_assessment_report(
+    format: str = Query(default="pdf", regex="^(pdf|csv)$"),
+    date_range: str = Query(default="30d", regex="^(7d|30d|90d)$"),
+    assessment_id: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate assessment analysis report (educators only)"""
+    try:
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Educator access required")
+        
+        report_result = reporting_system.generate_assessment_report(
+            assessment_id=assessment_id,
+            educator_id=current_user.id,
+            date_range=date_range,
+            format=format
+        )
+        
+        if "error" in report_result:
+            raise HTTPException(status_code=400, detail=report_result["error"])
+        
+        return report_result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating assessment report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to generate assessment report")
+
+@api_router.get("/reports/templates")
+async def get_report_templates(current_user: User = Depends(get_current_user)):
+    """Get available report templates"""
+    try:
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Educator access required")
+        
+        templates = reporting_system.get_report_templates()
+        
+        return {
+            "success": True,
+            "data": templates
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting report templates: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get report templates")
+
+@api_router.get("/reports/educator")
+async def get_educator_reports(
+    current_user: User = Depends(get_current_user),
+    limit: int = Query(default=20, ge=1, le=100)
+):
+    """Get reports generated by the current educator"""
+    try:
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Educator access required")
+        
+        reports = reporting_system.get_educator_reports(current_user.id, limit)
+        
+        if "error" in reports:
+            raise HTTPException(status_code=400, detail=reports["error"])
+        
+        return {
+            "success": True,
+            "data": reports
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting educator reports: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get educator reports")
+
+@api_router.delete("/reports/{report_id}")
+async def delete_report(
+    report_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a report (if permissions allow)"""
+    try:
+        if current_user.role not in [UserRole.TEACHER, UserRole.ADMIN]:
+            raise HTTPException(status_code=403, detail="Educator access required")
+        
+        result = reporting_system.delete_report(report_id, current_user.id)
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting report: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete report")
+
+# ============================================================================
+# APPLICATION LIFECYCLE
+# ============================================================================
+
 @app.on_event("startup")
 async def startup_event():
     """Application startup tasks"""
