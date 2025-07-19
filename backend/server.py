@@ -1817,17 +1817,6 @@ async def submit_answer(
         "explanation": question["explanation"]
     }
 
-# Include the router in the main app
-app.include_router(api_router)
-
-# Configure logging for production
-log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
-logging.basicConfig(
-    level=getattr(logging, log_level),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 # ============================================================================
 # ANALYTICS AND REPORTING ENDPOINTS - PHASE 2
 # ============================================================================
