@@ -137,8 +137,9 @@ class PredictiveEngine:
         try:
             # Extract user features for risk assessment
             user_features = self._extract_user_features(user_id)
-            if not user_features:
-                return {"error": "Insufficient user data for risk assessment"}
+            if not user_features or user_features.get("total_questions_answered", 0) < 5:
+                # Provide baseline risk assessment for new users
+                return self._generate_baseline_risk_assessment(user_id)
 
             # Calculate risk indicators
             risk_assessment = {
