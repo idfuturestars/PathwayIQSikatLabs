@@ -3161,6 +3161,9 @@ def run_all_tests():
     basic_tests = ['health', 'root', 'api_keys', 'demo_login', 'database']
     analytics_tests = ['analytics_auth', 'analytics_user_performance', 'analytics_dashboard', 'analytics_class', 'analytics_snapshot', 'analytics_history']
     reporting_tests = ['reports_auth', 'reports_student_progress', 'reports_class_performance', 'reports_assessment_analysis', 'reports_templates', 'reports_educator', 'reports_delete']
+    collaboration_tests = ['collaboration_auth', 'collaboration_create_group', 'collaboration_user_groups', 'collaboration_search', 'collaboration_discussion']
+    predictive_tests = ['predictive_auth', 'predictive_outcomes', 'predictive_risk', 'predictive_skills']
+    emotion_tests = ['emotion_auth', 'emotion_analyze', 'emotion_empathetic', 'emotion_journey', 'emotion_profile']
     content_tests = ['content_auth', 'content_types', 'content_quiz', 'content_lesson', 'content_explanation', 
                      'content_user_content', 'content_by_id', 'content_regenerate', 'content_error_handling']
     stt_tests = ['stt_authentication', 'stt_start_session', 'stt_transcribe', 'stt_user_sessions', 
