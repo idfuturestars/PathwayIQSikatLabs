@@ -38,6 +38,12 @@ from content_generator import get_content_generator, ContentGenerationRequest
 from gamification_engine import get_gamification_engine
 from leaderboard_system import get_leaderboard_system, LeaderboardCategory
 
+# Import study groups engine
+from study_groups_engine import StudyGroupsEngine
+
+# Import email service
+from email_service import email_service
+
 # Import adaptive engine
 import sys
 import os
