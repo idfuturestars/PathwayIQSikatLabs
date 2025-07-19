@@ -2317,6 +2317,8 @@ def run_all_tests():
     
     # Group results by category
     basic_tests = ['health', 'root', 'api_keys', 'demo_login', 'database']
+    analytics_tests = ['analytics_auth', 'analytics_user_performance', 'analytics_dashboard', 'analytics_class', 'analytics_snapshot', 'analytics_history']
+    reporting_tests = ['reports_auth', 'reports_student_progress', 'reports_class_performance', 'reports_assessment_analysis', 'reports_templates', 'reports_educator', 'reports_delete']
     content_tests = ['content_auth', 'content_types', 'content_quiz', 'content_lesson', 'content_explanation', 
                      'content_user_content', 'content_by_id', 'content_regenerate', 'content_error_handling']
     stt_tests = ['stt_authentication', 'stt_start_session', 'stt_transcribe', 'stt_user_sessions', 
@@ -2328,6 +2330,24 @@ def run_all_tests():
         if test_name in test_results:
             status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
             print(f"  {status} {test_name.replace('_', ' ').title()}")
+    
+    print("\n📊 ANALYTICS FUNCTIONALITY (PHASE 2):")
+    analytics_passed = 0
+    for test_name in analytics_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('analytics_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                analytics_passed += 1
+    
+    print("\n📋 REPORTING FUNCTIONALITY (PHASE 2):")
+    reporting_passed = 0
+    for test_name in reporting_tests:
+        if test_name in test_results:
+            status = "✅ PASS" if test_results[test_name] else "❌ FAIL"
+            print(f"  {status} {test_name.replace('reports_', '').replace('_', ' ').title()}")
+            if test_results[test_name]:
+                reporting_passed += 1
     
     print("\n🤖 AI CONTENT GENERATION FUNCTIONALITY:")
     content_passed = 0
@@ -2354,14 +2374,32 @@ def run_all_tests():
             print(f"  {status} {test_name.replace('_', ' ').title()}")
     
     print(f"\n🎯 Overall Result: {passed}/{total} tests passed")
+    print(f"📊 Analytics Result: {analytics_passed}/{len(analytics_tests)} tests passed")
+    print(f"📋 Reporting Result: {reporting_passed}/{len(reporting_tests)} tests passed")
     print(f"🤖 AI Content Generation Result: {content_passed}/{len(content_tests)} tests passed")
     print(f"🎤 Speech-to-Text Result: {stt_passed}/{len(stt_tests)} tests passed")
     
+    # Calculate Phase 2 success rate
+    phase2_passed = analytics_passed + reporting_passed
+    phase2_total = len(analytics_tests) + len(reporting_tests)
+    
+    print(f"\n🎯 PHASE 2 SUCCESS RATE: {phase2_passed}/{phase2_total} ({phase2_passed/phase2_total*100:.1f}%)")
+    
     if passed == total:
-        print("🎉 All tests passed! PathwayIQ backend with AI Content Generation is working correctly.")
+        print("🎉 All tests passed! PathwayIQ backend with Phase 2 Analytics & Reporting is working correctly.")
         return True
     else:
         print("⚠️  Some tests failed. Please check the details above.")
+        
+        # Specific feedback for Phase 2 features
+        if phase2_passed < phase2_total:
+            print(f"📊 Phase 2 Analytics & Reporting Status: {phase2_passed}/{phase2_total} tests passed")
+            if phase2_passed == 0:
+                print("❌ CRITICAL: Phase 2 Analytics & Reporting functionality is not working")
+            elif phase2_passed < phase2_total // 2:
+                print("⚠️  WARNING: Major issues with Phase 2 Analytics & Reporting functionality")
+            else:
+                print("⚠️  MINOR: Some Phase 2 Analytics & Reporting features have issues")
         
         # Specific feedback for AI content generation
         if content_passed < len(content_tests):
