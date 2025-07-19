@@ -2,6 +2,7 @@
 Study Groups and Collaborative Learning Engine
 Handles group management, real-time messaging, and collaborative features
 """
+import os
 import uuid
 import logging
 from datetime import datetime, timedelta
