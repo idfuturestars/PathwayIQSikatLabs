@@ -104,6 +104,9 @@ predictive_analytics = PredictiveAnalytics(MONGO_URL)
 # Initialize emotional intelligence analyzer
 emotional_intelligence = get_emotional_intelligence_analyzer(MONGO_URL, OPENAI_API_KEY)
 
+# Initialize data generator
+data_generator = get_data_generator(MONGO_URL)
+
 # Initialize OpenAI client
 from openai import AsyncOpenAI
 openai_client = AsyncOpenAI(api_key=OPENAI_API_KEY)
