@@ -3171,6 +3171,173 @@ def _generate_outcome_description(category: str) -> str:
     
     return outcomes.get(category, "Enhanced learning experience and academic performance")
 
+# ============================================================================
+# DATA POPULATION SYSTEM FOR ML OPTIMIZATION
+# ============================================================================
+
+class DataGenerationRequest(BaseModel):
+    num_users: int = 100
+    num_assessments_per_user: int = 20
+    num_content_per_user: int = 10
+    num_groups: int = 20
+
+@api_router.post("/data-generation/generate-dataset")
+async def generate_comprehensive_dataset(
+    request: DataGenerationRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate comprehensive synthetic educational dataset for ML training (admin only)"""
+    try:
+        # Check if user is admin
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Validate request parameters
+        if request.num_users > 1000:
+            raise HTTPException(status_code=400, detail="Maximum 1000 users allowed per request")
+        
+        if request.num_assessments_per_user > 100:
+            raise HTTPException(status_code=400, detail="Maximum 100 assessments per user allowed")
+        
+        # Generate dataset
+        result = await data_generator.generate_comprehensive_dataset(
+            num_users=request.num_users,
+            num_assessments_per_user=request.num_assessments_per_user,
+            num_content_per_user=request.num_content_per_user,
+            num_groups=request.num_groups
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        
+        return {
+            "success": True,
+            "message": "Comprehensive dataset generated successfully",
+            "results": result,
+            "total_records": (
+                result.get("users_generated", 0) +
+                result.get("assessments_generated", 0) +
+                result.get("content_generated", 0) +
+                result.get("groups_generated", 0) +
+                result.get("emotional_profiles_generated", 0) +
+                result.get("speech_sessions_generated", 0)
+            )
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating dataset: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate dataset")
+
+@api_router.get("/data-generation/status")
+async def get_data_generation_status(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current database statistics and synthetic data status"""
+    try:
+        # Check if user is admin or educator
+        if current_user.role not in ["admin", "teacher"]:
+            raise HTTPException(status_code=403, detail="Admin or educator access required")
+        
+        # Get collection statistics
+        stats = {
+            "users": {
+                "total": db.users.count_documents({}),
+                "synthetic": db.users.count_documents({"is_synthetic": True}),
+                "real": db.users.count_documents({"is_synthetic": {"$ne": True}})
+            },
+            "assessments": {
+                "total": db.assessments.count_documents({}),
+                "synthetic": db.assessments.count_documents({"is_synthetic": True}),
+                "real": db.assessments.count_documents({"is_synthetic": {"$ne": True}})
+            },
+            "content_generation": {
+                "total": db.content_generation.count_documents({}),
+                "synthetic": db.content_generation.count_documents({"is_synthetic": True}),
+                "real": db.content_generation.count_documents({"is_synthetic": {"$ne": True}})
+            },
+            "emotional_profiles": {
+                "total": db.emotional_profiles.count_documents({}),
+                "synthetic": db.emotional_profiles.count_documents({"is_synthetic": True}),
+                "real": db.emotional_profiles.count_documents({"is_synthetic": {"$ne": True}})
+            },
+            "study_groups": {
+                "total": db.study_groups.count_documents({}),
+                "synthetic": db.study_groups.count_documents({"is_synthetic": True}),
+                "real": db.study_groups.count_documents({"is_synthetic": {"$ne": True}})
+            },
+            "speech_sessions": {
+                "total": db.speech_sessions.count_documents({}),
+                "synthetic": db.speech_sessions.count_documents({"is_synthetic": True}),
+                "real": db.speech_sessions.count_documents({"is_synthetic": {"$ne": True}})
+            }
+        }
+        
+        # Calculate data readiness for ML
+        total_assessments = stats["assessments"]["total"]
+        total_users = stats["users"]["total"]
+        
+        ml_readiness = {
+            "ready_for_training": total_assessments >= 1000 and total_users >= 50,
+            "data_quality": "good" if total_assessments > 500 else "fair" if total_assessments > 100 else "insufficient",
+            "recommended_action": (
+                "Ready for ML model training" if total_assessments >= 1000 
+                else f"Generate {1000 - total_assessments} more assessments for optimal training"
+            )
+        }
+        
+        return {
+            "success": True,
+            "statistics": stats,
+            "ml_readiness": ml_readiness,
+            "generation_timestamp": datetime.utcnow().isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting data status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get data status")
+
+@api_router.delete("/data-generation/clear-synthetic")
+async def clear_synthetic_data(
+    current_user: User = Depends(get_current_user)
+):
+    """Clear all synthetic data from the database (admin only)"""
+    try:
+        # Check if user is admin
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Delete synthetic data from all collections
+        collections_cleared = {}
+        
+        collections = [
+            "users", "assessments", "content_generation", 
+            "emotional_profiles", "study_groups", "group_members",
+            "group_messages", "speech_sessions"
+        ]
+        
+        for collection_name in collections:
+            collection = getattr(db, collection_name)
+            result = collection.delete_many({"is_synthetic": True})
+            collections_cleared[collection_name] = result.deleted_count
+        
+        total_cleared = sum(collections_cleared.values())
+        
+        return {
+            "success": True,
+            "message": f"Cleared {total_cleared} synthetic records",
+            "collections_cleared": collections_cleared
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error clearing synthetic data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clear synthetic data")
+
 # Include the router in the main app
 app.include_router(api_router)
 
