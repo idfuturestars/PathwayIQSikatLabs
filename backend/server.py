@@ -3338,6 +3338,87 @@ async def clear_synthetic_data(
         logger.error(f"Error clearing synthetic data: {e}")
         raise HTTPException(status_code=500, detail="Failed to clear synthetic data")
 
+@api_router.post("/api/submit-assessment")
+async def submit_assessment(
+    assessment_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Submit assessment results"""
+    try:
+        # Store assessment in database
+        assessment_doc = {
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.id,
+            "subject": assessment_data.get("subject", "general"),
+            "assessment_type": assessment_data.get("assessment_type", "adaptive"),
+            "final_score": assessment_data.get("final_score", 0),
+            "final_ability_estimate": assessment_data.get("final_ability_estimate", 0),
+            "questions_answered": assessment_data.get("questions_answered", 0),
+            "questions_correct": assessment_data.get("questions_correct", 0),
+            "created_at": datetime.utcnow(),
+            "responses": assessment_data.get("responses", [])
+        }
+        
+        result = db.assessments.insert_one(assessment_doc)
+        
+        # Track gamification achievement
+        gamification = get_gamification_engine(db)
+        await gamification.track_achievement(
+            current_user.id,
+            "assessment_completed",
+            metadata={"subject": assessment_doc["subject"], "score": assessment_doc["final_score"]}
+        )
+        
+        return {
+            "success": True,
+            "assessment_id": assessment_doc["id"],
+            "message": "Assessment submitted successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error submitting assessment: {e}")
+        raise HTTPException(status_code=500, detail="Failed to submit assessment")
+
+@api_router.get("/api/assessment-history")
+async def get_assessment_history(
+    limit: int = 20,
+    skip: int = 0,
+    subject: Optional[str] = None,
+    current_user: User = Depends(get_current_user)
+):
+    """Get user's assessment history"""
+    try:
+        query = {"user_id": current_user.id}
+        if subject:
+            query["subject"] = subject
+            
+        assessments = list(
+            db.assessments
+            .find(query)
+            .sort("created_at", -1)
+            .skip(skip)
+            .limit(limit)
+        )
+        
+        # Convert ObjectId to string and format dates
+        for assessment in assessments:
+            assessment["_id"] = str(assessment["_id"])
+            assessment["created_at"] = assessment["created_at"].isoformat()
+        
+        total_count = db.assessments.count_documents(query)
+        
+        return {
+            "success": True,
+            "assessments": assessments,
+            "total": total_count,
+            "page": skip // limit + 1,
+            "per_page": limit
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting assessment history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get assessment history")
+
 # Include the router in the main app
 app.include_router(api_router)
 
