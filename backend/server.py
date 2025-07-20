@@ -38,6 +38,9 @@ from content_generator import get_content_generator, ContentGenerationRequest
 from gamification_engine import get_gamification_engine
 from leaderboard_system import get_leaderboard_system, LeaderboardCategory
 
+# Import analytics module
+from analytics_engine import get_analytics_engine, AnalyticsTimeframe, MetricType
+
 # Import adaptive engine
 import sys
 import os
