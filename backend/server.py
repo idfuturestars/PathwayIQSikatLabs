@@ -2922,7 +2922,7 @@ async def get_model_status(
 # ============================================================================
 
 class EmotionalAnalysisRequest(BaseModel):
-    text_input: str
+    text: str  # Changed from text_input to match API contract
     context: str = "general"
     source: str = "assessment"
 
@@ -2938,7 +2938,7 @@ async def analyze_emotional_state(
     try:
         result = await emotional_intelligence.analyze_emotional_state(
             user_id=current_user.id,
-            text_input=request.text_input,
+            text_input=request.text,  # Use the correct field name internally
             context=request.context,
             source=request.source
         )
