@@ -56,6 +56,9 @@ from predictive_analytics import PredictiveAnalytics
 # Import emotional intelligence
 from emotional_intelligence import get_emotional_intelligence_analyzer
 
+# Import data generator
+from data_generator import get_data_generator
+
 # Import adaptive engine
 import sys
 import os
