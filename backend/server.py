@@ -367,6 +367,19 @@ class CompetitionJoinRequest(BaseModel):
     """Request model for joining competitions"""
     competition_id: str
 
+class AnalyticsRequest(BaseModel):
+    """Request model for analytics queries"""
+    timeframe: str = "monthly"
+    metric_types: List[str] = []
+    filters: Dict[str, Any] = {}
+
+class DashboardAnalyticsRequest(BaseModel):
+    """Request model for dashboard analytics"""
+    user_id: Optional[str] = None
+    group_id: Optional[str] = None
+    timeframe: str = "monthly"
+    include_comparisons: bool = True
+
 class BadgeNotificationRequest(BaseModel):
     """Request model for badge notifications"""
     notification_ids: Optional[List[str]] = None
