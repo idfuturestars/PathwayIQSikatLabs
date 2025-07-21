@@ -3477,13 +3477,14 @@ async def train_vertex_ai_models(
             raise HTTPException(status_code=403, detail="Admin access required")
         
         # First export data if needed
-        export_result = await vertex_ai_integration.export_educational_data_to_gcs()
+        vertex_ai = get_vertex_ai_lazy()
+        export_result = await vertex_ai.export_educational_data_to_gcs()
         
         if "error" in export_result:
             raise HTTPException(status_code=500, detail=f"Data export failed: {export_result['error']}")
         
         # Start model training
-        training_result = await vertex_ai_integration.create_vertex_ai_models(
+        training_result = await vertex_ai.create_vertex_ai_models(
             export_result.get("datasets", {})
         )
         
