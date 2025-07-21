@@ -3447,7 +3447,8 @@ async def export_data_to_vertex_ai(
             raise HTTPException(status_code=403, detail="Admin access required")
         
         # Export educational data to GCS
-        result = await vertex_ai_integration.export_educational_data_to_gcs()
+        vertex_ai = get_vertex_ai_lazy()
+        result = await vertex_ai.export_educational_data_to_gcs()
         
         if "error" in result:
             raise HTTPException(status_code=500, detail=result["error"])
