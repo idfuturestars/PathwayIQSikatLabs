@@ -59,6 +59,9 @@ from emotional_intelligence import get_emotional_intelligence_analyzer
 # Import data generator
 from data_generator import get_data_generator
 
+# Import Vertex AI integration  
+from vertex_ai_integration import get_vertex_ai_integration
+
 # Import adaptive engine
 import sys
 import os
