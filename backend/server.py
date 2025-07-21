@@ -3425,6 +3425,147 @@ async def get_assessment_history(
         logger.error(f"Error getting assessment history: {e}")
         raise HTTPException(status_code=500, detail="Failed to get assessment history")
 
+# ============================================================================
+# GOOGLE CLOUD VERTEX AI ML PIPELINE
+# ============================================================================
+
+@api_router.post("/vertex-ai/export-data")
+async def export_data_to_vertex_ai(
+    current_user: User = Depends(get_current_user)
+):
+    """Export PathwayIQ educational data to Google Cloud Storage for ML training (admin only)"""
+    try:
+        # Check if user is admin
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # Export educational data to GCS
+        result = await vertex_ai_integration.export_educational_data_to_gcs()
+        
+        if "error" in result:
+            raise HTTPException(status_code=500, detail=result["error"])
+        
+        return {
+            "success": True,
+            "message": "Educational data exported to Google Cloud Storage successfully",
+            "export_details": result,
+            "next_step": "Use POST /vertex-ai/train-models to start ML model training"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting data to Vertex AI: {e}")
+        raise HTTPException(status_code=500, detail="Failed to export data to Vertex AI")
+
+@api_router.post("/vertex-ai/train-models")
+async def train_vertex_ai_models(
+    current_user: User = Depends(get_current_user)
+):
+    """Start training Vertex AI AutoML models (admin only)"""
+    try:
+        # Check if user is admin
+        if current_user.role != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        
+        # First export data if needed
+        export_result = await vertex_ai_integration.export_educational_data_to_gcs()
+        
+        if "error" in export_result:
+            raise HTTPException(status_code=500, detail=f"Data export failed: {export_result['error']}")
+        
+        # Start model training
+        training_result = await vertex_ai_integration.create_vertex_ai_models(
+            export_result.get("datasets", {})
+        )
+        
+        if "error" in training_result:
+            raise HTTPException(status_code=500, detail=training_result["error"])
+        
+        return {
+            "success": True,
+            "message": "Vertex AI model training started successfully",
+            "training_jobs": training_result.get("training_jobs", {}),
+            "project_id": "pathwayiq-ml-pipeline-466617",
+            "monitor_url": f"https://console.cloud.google.com/vertex-ai/training/training-pipelines?project=pathwayiq-ml-pipeline-466617",
+            "estimated_time": "60-180 minutes for model training completion"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error training Vertex AI models: {e}")
+        raise HTTPException(status_code=500, detail="Failed to start model training")
+
+@api_router.get("/vertex-ai/status")
+async def get_vertex_ai_status(
+    current_user: User = Depends(get_current_user)
+):
+    """Get Google Cloud Vertex AI integration status"""
+    try:
+        # Check if user is admin or educator
+        if current_user.role not in ["admin", "teacher"]:
+            raise HTTPException(status_code=403, detail="Admin or educator access required")
+        
+        # Check Google Cloud availability
+        try:
+            from google.cloud import aiplatform
+            google_cloud_available = True
+            
+            # Initialize to test connection
+            aiplatform.init(project="pathwayiq-ml-pipeline-466617", location="us-central1")
+            connection_status = "connected"
+            
+        except ImportError:
+            google_cloud_available = False
+            connection_status = "libraries_missing"
+        except Exception as e:
+            google_cloud_available = True
+            connection_status = f"connection_error: {str(e)}"
+        
+        # Get data statistics for ML readiness
+        data_stats = {
+            "users": db.users.count_documents({}),
+            "assessments": db.assessments.count_documents({}),
+            "content_generation": db.content_generation.count_documents({}),
+            "emotional_profiles": db.emotional_profiles.count_documents({}),
+            "synthetic_data": {
+                "users": db.users.count_documents({"is_synthetic": True}),
+                "assessments": db.assessments.count_documents({"is_synthetic": True})
+            }
+        }
+        
+        # ML readiness assessment
+        total_assessments = data_stats["assessments"]
+        ml_readiness = {
+            "ready_for_training": total_assessments >= 100,
+            "data_quality": "excellent" if total_assessments >= 1000 else "good" if total_assessments >= 500 else "fair" if total_assessments >= 100 else "insufficient",
+            "recommendation": (
+                "Ready for Vertex AI model training" if total_assessments >= 100
+                else f"Generate {100 - total_assessments} more assessments for minimum training requirements"
+            )
+        }
+        
+        return {
+            "success": True,
+            "vertex_ai_status": {
+                "project_id": "pathwayiq-ml-pipeline-466617",
+                "region": "us-central1",
+                "google_cloud_available": google_cloud_available,
+                "connection_status": connection_status,
+                "bucket_name": f"pathwayiq-education-data-466617"
+            },
+            "data_readiness": data_stats,
+            "ml_training_readiness": ml_readiness,
+            "console_url": "https://console.cloud.google.com/vertex-ai?project=pathwayiq-ml-pipeline-466617"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting Vertex AI status: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get Vertex AI status")
+
 # Include the router in the main app
 app.include_router(api_router)
 
