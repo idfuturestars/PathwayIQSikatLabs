@@ -110,8 +110,15 @@ emotional_intelligence = get_emotional_intelligence_analyzer(MONGO_URL, OPENAI_A
 # Initialize data generator
 data_generator = get_data_generator(MONGO_URL)
 
-# Initialize Vertex AI integration
-vertex_ai_integration = get_vertex_ai_integration(MONGO_URL, "pathwayiq-ml-pipeline-466617")
+# Initialize Vertex AI integration lazily (to avoid blocking startup)
+vertex_ai_integration = None
+
+def get_vertex_ai_lazy():
+    """Lazy initialization of Vertex AI integration"""
+    global vertex_ai_integration
+    if vertex_ai_integration is None:
+        vertex_ai_integration = get_vertex_ai_integration(MONGO_URL, "pathwayiq-ml-pipeline-466617")
+    return vertex_ai_integration
 
 # Initialize OpenAI client
 from openai import AsyncOpenAI
